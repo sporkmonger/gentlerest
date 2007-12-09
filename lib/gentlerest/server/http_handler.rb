@@ -69,7 +69,8 @@ module GentleREST
         end
       rescue Exception => error
         begin
-          error_controller = GentleREST::ErrorController.new(error)
+          error_controller =
+            GentleREST::DefaultResponseController.new(500, error)
           http_response = error_controller.dispatch_action(
             http_request, GentleREST::HttpResponse.new)
         rescue Exception => error

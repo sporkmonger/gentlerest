@@ -1,5 +1,5 @@
 #--
-# GentleREST, Copyright (c) 2007 Robert Aman
+# GentleREST, Copyright (c) 2007-2008 Robert Aman
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
