@@ -63,6 +63,7 @@
           }
         }
   %body
+    - error = objects.first
     #header
       %h1 500 Internal Server Error
       %h2= error.class.name
