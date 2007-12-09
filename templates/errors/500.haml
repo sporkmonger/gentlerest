@@ -1,0 +1,79 @@
+!!! XML
+<!DOCTYPE html>
+%html{ html_attrs }
+  %head
+    %title= "500 Internal Server Error - " + error.class.name
+    %style
+      :plain                  
+        * {
+          font-size: 100%;
+          margin: 0;
+          padding: 0;
+        }
+
+        body {
+          font-family: lucida grande, verdana, sans-serif;
+          margin: 1em;
+        }
+
+        a {
+          color: #880000;
+        }
+
+        a:visited {
+          color: #888888;
+        }
+
+        h1 {
+          font-size: 2em;
+          margin: 0 0 0.8em 0;
+        }
+
+        h2 {
+          font-size: 1em;
+          margin: 0.8em 0;
+        }
+
+        p {
+          margin: 0.8em 0;
+        }
+
+        ul {
+          font-size: 0.9em;
+          margin: 0 0 0 1.5em;
+        }
+        
+        pre {
+          padding: 1em;
+          border: 2px solid #AAAAAA;
+          background-color: #888888;
+          overflow: auto;
+        }
+
+        #content {
+          padding: 0 0.8em;
+          background-color: #AA5852;
+          border: 2px solid #C2645D;
+        }
+
+        @media print {
+          a {
+            text-decoration: none;
+            color: #000000;
+          }
+        }
+  %body
+    #header
+      %h1 500 Internal Server Error
+      %h2= error.class.name
+    #content
+      %p An error has occurred while processing the request:
+      %p= error.message
+      - if error.respond_to?(:backtrace) && error.backtrace != nil
+        %p
+          :oneline
+            %pre
+              %code
+                = preserve(error.backtrace.join("\\n"))
+      - else
+        %p Backtrace is unavailable.
