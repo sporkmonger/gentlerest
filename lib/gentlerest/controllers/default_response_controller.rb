@@ -34,7 +34,7 @@ module GentleREST
       @objects = objects
     end
 
-    attr_reader :error
+    attr_reader :objects
 
     action(ALL_METHODS) do
       error = @objects.first
