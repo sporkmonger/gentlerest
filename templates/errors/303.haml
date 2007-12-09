@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 %html{ html_attrs }
   %head
-    %title= 500 Internal Server Error
+    %title 303 See Other
     %style
       :plain                  
         * {
@@ -63,18 +63,11 @@
           }
         }
   %body
-    - error = objects.first
     #header
-      %h1 500 Internal Server Error
-      %h2= error.class.name
+      %h1 303 See Other
     #content
-      %p An error has occurred while processing the request:
-      %p= error.message
-      - if error.respond_to?(:backtrace) && error.backtrace != nil
-        %p
-          :oneline
-            %pre
-              %code
-                = preserve(error.backtrace.join("\\n"))
-      - else
-        %p Backtrace is unavailable.
+      - location = objects.first
+      %p
+        You are being redirected to this location:
+        %a{:href => location}
+          = location

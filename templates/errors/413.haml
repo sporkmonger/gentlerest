@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 %html{ html_attrs }
   %head
-    %title= 500 Internal Server Error
+    %title 413 Request Entity Too Large
     %style
       :plain                  
         * {
@@ -63,18 +63,8 @@
           }
         }
   %body
-    - error = objects.first
     #header
-      %h1 500 Internal Server Error
-      %h2= error.class.name
+      %h1 413 Request Entity Too Large
     #content
-      %p An error has occurred while processing the request:
-      %p= error.message
-      - if error.respond_to?(:backtrace) && error.backtrace != nil
-        %p
-          :oneline
-            %pre
-              %code
-                = preserve(error.backtrace.join("\\n"))
-      - else
-        %p Backtrace is unavailable.
+      %p
+        The request was too long, please shorten it.
