@@ -107,6 +107,15 @@ module GentleREST
           "application/xhtml+xml;charset=#{self.encoding}"
       end
     end
+
+    # Sets the mime type for the response to text/plain.
+    def plain_text
+      if self.encoding == nil
+        self.headers["Content-Type"] = "text/plain"
+      else
+        self.headers["Content-Type"] = "text/plain;charset=#{self.encoding}"
+      end
+    end
     
     # Sets the encoding for the response to utf-8.
     def utf8

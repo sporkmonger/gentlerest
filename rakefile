@@ -30,7 +30,7 @@ PKG_FILES = FileList[
     "lib/**/*", "spec/**/*", "vendor/**/*",
     "doc/**/*", "specdoc/**/*", "coverage/**/*",
     "[A-Z]*", "rakefile"
-].exclude(/\bCVS\b|~$/).exclude(/database\.yml/).exclude(/[_\.]svn$/)
+].exclude(/[_\.]svn$/).exclude(/[_\.]git$/)
 
 module Rake
   def self.browse(filepath)
@@ -92,8 +92,12 @@ gem_spec = Gem::Specification.new do |s|
   
   s.add_dependency('rake', '>= 0.7.2')
   s.add_dependency('rspec', '>= 0.7.1')
+  s.add_dependency('addressable', '>= 1.0.1')
 
   s.require_path = 'lib'
+  s.bindir = "bin"
+  s.executables = ["gentlerest"]
+  s.default_executable = "gentlerest"
 
   s.author = "Bob Aman"
   s.email = "bob@sporkmonger.com"

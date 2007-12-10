@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 %html{ html_attrs }
   %head
-    %title 501 Not Implemented
+    %title 500 Internal Server Error - Missing Template
     %style
       :plain                  
         * {
@@ -42,7 +42,7 @@
           font-size: 0.9em;
           margin: 0 0 0 1.5em;
         }
-        
+
         pre {
           padding: 1em;
           border: 2px solid #AAAAAA;
@@ -64,8 +64,8 @@
         }
   %body
     #header
-      %h1 501 Not Implemented
+      %h1 500 Internal Server Error
+      %h2 Missing Template
     #content
-      %p
-        The server does not support the functionality required to fulfill
-        the request.
+      %p An error has occurred while processing the request.
+      %p= "Could not find template for response status: #{response_status}"

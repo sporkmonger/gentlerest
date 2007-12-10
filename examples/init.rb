@@ -1,14 +1,38 @@
-require 'rubygems'
-require 'gentlerest'
-require 'applications/sporkblog'
-require 'applications/sporkfed'
+# Load external start options
+start_options = GentleREST.start_options(File.expand_path(__FILE__))
 
-GentleREST.start do |server|
-  Sporkblog.new(server, "/blog/")
-  Sporkfed.new(server, "/fed/")
-  server.routes.push(
-    GentleREST::Route.new("/images/{path}",
-      GentleREST::StaticFileController.new("static/images/{path}")),
-    GentleREST::Route.new("/", HomeController.new)
-  )
+class HelloWorldController < GentleREST::BaseController
+  action([:GET]) do
+    response.plain_text
+    response.body = "Hello world."
+  end
+end
+
+class HomeController < GentleREST::BaseController
+  action([:GET]) do
+    response.html
+    response.body = <<-HTML
+<html>
+  <head>
+    <title>
+      Root
+    </title>
+  </head>
+  <body>
+    This is the root path.
+  </body>
+</html>
+HTML
+  end
+
+  action([:GET], "action" => "home") do
+    response.plain_text
+    response.body = "Welcome home."
+  end
+end
+
+GentleREST.start(start_options) do |server|
+  server.routes << GentleREST::Route.new("/hello/", HelloWorldController.new)
+  server.routes << GentleREST::Route.new("/{action}/", HomeController.new)
+  server.routes << GentleREST::Route.new("/", HomeController.new)
 end

@@ -28,7 +28,7 @@ require 'gentlerest/utilities/blank'
 require 'gentlerest/server'
 require 'gentlerest/server/http_request'
 require 'gentlerest/server/http_response'
-require 'gentlerest/controllers/error_controller'
+require 'gentlerest/controllers/default_response_controller'
 require 'gentlerest/controllers/redirect_controller'
 
 module GentleREST
@@ -51,8 +51,7 @@ module GentleREST
         selected_route = nil
         uri = Addressable::URI.parse(mongrel_request.params["REQUEST_URI"])
         for route in self.server.routes
-          variables = uri.extract_mapping(
-            route.pattern, route.processor)
+          variables = uri.extract_mapping(route.pattern, route.processor)
           if variables != nil
             selected_route = route
             break
@@ -69,8 +68,16 @@ module GentleREST
         end
       rescue Exception => error
         begin
+          case error
+          when GentleREST::NoRouteError
+            status = 404
+          when GentleREST::NoMatchingActionError
+            status = 404
+          else
+            status = 500
+          end
           error_controller =
-            GentleREST::DefaultResponseController.new(500, error)
+            GentleREST::DefaultResponseController.new(status, error)
           http_response = error_controller.dispatch_action(
             http_request, GentleREST::HttpResponse.new)
         rescue Exception => error

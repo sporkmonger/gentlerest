@@ -57,6 +57,7 @@ module GentleREST
       :address => "0.0.0.0",
       :port => 3000
     }.merge(options)
+    
     server = nil
     if self.servers[options[:name]] == nil
       mongrel_instance = Mongrel::HttpServer.new(
@@ -81,6 +82,21 @@ module GentleREST
     else
       raise StandardError, "Could not stop the '#{name}' GentleREST server."
     end
+  end
+  
+  # Allows for start options to be set externally to the init script.
+  def self.start_options(key=nil)
+    if !defined?(@start_options) || @start_options.blank?
+      @start_options = {}
+    end
+    if @start_options[key] == nil
+      @start_options[key] = {
+        :name => :default,
+        :address => "0.0.0.0",
+        :port => 3000
+      }
+    end
+    return @start_options[key]
   end
 
   # This class wraps a Mongrel server instance.

@@ -103,6 +103,9 @@ module GentleREST
         (class <<context; self; end).send(:define_method, :response) do
           http_response
         end
+        (class <<context; self; end).send(:define_method, :preformat) do |x|
+          "<pre>" + x.gsub("\n", "&#x000A;") + "</pre>"
+        end
 
         # Execute the action Proc within the custom execution context.
         result_body = selected_action.action.bind(context).call

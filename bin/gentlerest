@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+
+lib_path = File.expand_path(File.join(File.dirname(__FILE__), "/../lib"))
+$:.unshift(lib_path)
+$:.uniq!
+
+require 'gentlerest'
+require 'rubygems'
+
+command = ARGV.shift
+
+i = 0
+loop do
+  break if ARGV.empty?
+  var = ARGV[i]
+  if var =~ /^\w+\=.*$/
+    key, value = var.split("=", 2)
+    key.upcase!
+    ENV[key] = value
+    ARGV.delete(var)
+  else
+    i += 1
+  end
+  break if i >= ARGV.size
+end
+
+# Default to a development environment
+ENV['GENTLE_ENV'] = 'development' if ENV['GENTLE_ENV'] == nil
+
+i = 0
+command_arguments = {
+  "--port" => "3000",
+  "--address" => "0.0.0.0",
+  "--name" => "default"
+}
+loop do
+  break if ARGV.empty?
+  var = ARGV[i].dup
+  var.gsub!(/^-p$/, "--port")
+  var.gsub!(/^-a$/, "--address")
+  var.gsub!(/^-n$/, "--name")
+  if var =~ /^\-.*$/
+    command_arguments[var] = true
+    ARGV.delete_at(i)
+    if ARGV[i][0] != "-" && ARGV[i][0] != 45
+      command_arguments[var] = ARGV[i]
+      ARGV.delete_at(i)
+    end
+  else
+    i += 1
+  end
+  break if i >= ARGV.size
+end
+
+if !ARGV.empty?
+  puts "Invalid options:"
+  puts ARGV.join(" ")
+  puts
+  puts "For help using this application: gentlerest help"
+  exit
+end
+
+if ENV['GENTLE_ROOT'] == nil
+  # Find root directory
+  current_directory = File.expand_path(".")
+  loop do
+    if File.exists?(File.join(current_directory, "config")) && 
+        (File.exists?(File.join(current_directory, "rakefile")) ||
+        File.exists?(File.join(current_directory, "Rakefile")))
+      ENV['GENTLE_ROOT'] = current_directory
+      break
+    elsif current_directory ==
+        File.expand_path(File.join(current_directory, ".."))
+      # Top level, couldn't find GENTLE_ROOT
+      if !([nil, "usage", "help"].include?(command))
+        puts "Could not find GENTLE_ROOT.  Aborting."
+        exit
+      end
+      break
+    else
+      current_directory = File.expand_path(File.join(current_directory, ".."))
+    end
+  end
+end
+
+case command
+when nil, "usage", "help"
+  puts "Usage: gentlerest <command> [options] [environment]"
+when "start"
+  port = command_arguments["--port"].to_i
+  address = command_arguments["--address"]
+  name = command_arguments["--name"].to_sym
+
+  # TODO: set up daemon here
+  
+  init_script = File.expand_path(
+    File.join(ENV['GENTLE_ROOT'], "config/init.rb"))
+  start_options = GentleREST.start_options(init_script)
+    
+  start_options[:port] = port
+  start_options[:address] = address
+  start_options[:name] = name
+  
+  load(init_script)
+  
+  server = GentleREST.server(name)
+  
+  puts "Server running at #{server.address} on port #{server.port}."
+  
+  # Wait for the thread to shut down.
+  server.mongrel_instance.acceptor.join
+else
+  puts "Invalid command: #{command.inspect}"
+  puts
+  puts "For help using this application: gentlerest help"
+end

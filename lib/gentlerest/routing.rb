@@ -70,5 +70,12 @@ module GentleREST
     def processor=(new_processor)
       @options[:processor] = new_processor
     end
+
+    # Inspects the internal state of the route.
+    def inspect
+      return "#<GentleREST::Route:0x#{self.object_id.to_s(16)} " +
+        "PATTERN:#{self.pattern.inspect} " +
+        "CONTROLLER:#{self.controller.class.to_s}>"
+    end
   end
 end

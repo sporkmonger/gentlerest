@@ -34,20 +34,37 @@ module GentleREST
       @objects = objects
     end
 
+    attr_reader :response_status
     attr_reader :objects
 
     action(ALL_METHODS) do
-      error = @objects.first
-      response.status = @response_status
-      template_file = File.expand_path(File.join(
-        File.dirname(__FILE__),
-        "/../../templates/errors/#{@response_status}.haml"
-      ))
-      template_content = File.open(template_file, "r") do |file|
-        file.read
-      end
+      response.status = response_status
       response.xhtml
       response.utf8
+      template_file = File.expand_path(File.join(
+        File.dirname(__FILE__),
+        "/../../../templates/errors/#{response_status}.haml"
+      ))
+      if File.exists?(template_file)
+        template_content = File.open(template_file, "r") do |file|
+          file.read
+        end
+      else
+        # Couldn't find the template, time to explode
+        response.status = 500
+        template_file = File.expand_path(File.join(
+          File.dirname(__FILE__),
+          "/../../../templates/errors/template_missing.haml"
+        ))
+        if File.exists?(template_file)
+          template_content = File.open(template_file, "r") do |file|
+            file.read
+          end
+        else
+          response.plain_text
+          template_content = "Missing template: #{response_status}.haml"
+        end
+      end
       response.body = Haml::Engine.new(
         template_content, {
           :attr_wrapper => "\"",

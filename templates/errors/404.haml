@@ -63,8 +63,22 @@
           }
         }
   %body
-    #header
-      %h1 404 Not Found
-    #content
-      %p
-        No available resources matching the request were found.
+    - if ENV['GENTLE_ENV'] == 'development'
+      - error = objects.first
+      #header
+        %h1 404 Not Found
+        %h2= error.class.name
+      #content
+        %p No available resources matching the request were found:
+        %p= error.message
+        - if error.respond_to?(:backtrace) && error.backtrace != nil
+          %p
+            = preformat(error.backtrace.join("\n"))
+        - else
+          %p Backtrace is unavailable.      
+    - else
+      #header
+        %h1 404 Not Found
+      #content
+        %p
+          No available resources matching the request were found.
