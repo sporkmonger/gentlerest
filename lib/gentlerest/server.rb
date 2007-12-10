@@ -52,11 +52,7 @@ module GentleREST
     # For debugging, mostly
     Thread.abort_on_exception = true
     
-    options = {
-      :name => :default,
-      :address => "0.0.0.0",
-      :port => 3000
-    }.merge(options)
+    options = self.default_options.merge(options)
     
     server = nil
     if self.servers[options[:name]] == nil
@@ -84,19 +80,26 @@ module GentleREST
     end
   end
   
-  # Allows for start options to be set externally to the init script.
-  def self.start_options(key=nil)
-    if !defined?(@start_options) || @start_options.blank?
-      @start_options = {}
-    end
-    if @start_options[key] == nil
-      @start_options[key] = {
+  # Returns the default options for a server.
+  def self.default_options
+    if !defined?(@default_options) || @default_options.blank?
+      @default_options = {
         :name => :default,
         :address => "0.0.0.0",
         :port => 3000
       }
     end
-    return @start_options[key]
+    return @default_options
+  end
+  
+  # Sets the default options for a server.
+  def self.default_options=(new_options)
+    if new_options[:name] == nil || new_options[:address] == nil ||
+        new_options[:port] == nil
+      raise ArgumentError,
+        "Options hash must have values for :name, :address, and :port."
+    end
+    @default_options = new_options
   end
 
   # This class wraps a Mongrel server instance.

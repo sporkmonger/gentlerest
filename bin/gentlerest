@@ -95,11 +95,10 @@ when "start"
   
   init_script = File.expand_path(
     File.join(ENV['GENTLE_ROOT'], "config/init.rb"))
-  start_options = GentleREST.start_options(init_script)
-    
-  start_options[:port] = port
-  start_options[:address] = address
-  start_options[:name] = name
+
+  GentleREST.default_options[:port] = port
+  GentleREST.default_options[:address] = address
+  GentleREST.default_options[:name] = name
   
   load(init_script)
   
