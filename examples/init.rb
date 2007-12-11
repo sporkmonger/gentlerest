@@ -20,6 +20,7 @@ class HomeController < GentleREST::BaseController
   </body>
 </html>
 HTML
+    response.cache = true
   end
 
   action([:GET], "action" => "home") do

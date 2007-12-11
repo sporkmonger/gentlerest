@@ -38,6 +38,9 @@ module GentleREST
     attr_reader :objects
 
     action(ALL_METHODS) do
+      # We definitely do not want to cache this response.
+      response.cache = false
+      
       response.status = response_status
       response.xhtml
       response.utf8

@@ -50,9 +50,16 @@ module GentleREST
     end
     
     # Returns the variables Hash for the request.
-    attr_reader :variables
+    def variables
+      return @variables
+    end
     
     # Sets the variables Hash for the request.
-    attr_writer :variables
+    def variables=(new_variables)
+      if !new_variables.kind_of?(Hash)
+        raise TypeError, "Expected Hash, got #{new_variables.class.name}."
+      end
+      @variables = new_variables
+    end
   end
 end

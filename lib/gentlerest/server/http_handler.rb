@@ -28,6 +28,7 @@ require 'gentlerest/utilities/blank'
 require 'gentlerest/server'
 require 'gentlerest/server/http_request'
 require 'gentlerest/server/http_response'
+require 'gentlerest/server/http_cache'
 require 'gentlerest/controllers/default_response_controller'
 require 'gentlerest/controllers/redirect_controller'
 
@@ -36,6 +37,9 @@ module GentleREST
   class HttpHandler < Mongrel::HttpHandler
     def initialize(server)
       @server = server
+      
+      # Initialize the http cache.
+      GentleREST::HttpCache.startup()
     end
     
     def server
@@ -46,25 +50,42 @@ module GentleREST
       http_response = nil
       http_request = GentleREST::HttpRequest.new(mongrel_request)
       begin
-        method = mongrel_request.params["REQUEST_METHOD"]
-        variables = nil
-        selected_route = nil
-        uri = Addressable::URI.parse(mongrel_request.params["REQUEST_URI"])
-        for route in self.server.routes
-          variables = uri.extract_mapping(route.pattern, route.processor)
-          if variables != nil
-            selected_route = route
-            break
+        http_host = mongrel_request.params["HTTP_HOST"]
+        http_uri = mongrel_request.params["REQUEST_URI"]
+
+        # TODO: when X_FORWARDED_PROTO is set to "https", change the scheme
+        uri = Addressable::URI.parse("http://#{http_host}#{http_uri}")
+        
+        http_response = GentleREST::HttpCache.retrieve(uri)
+        if http_response == nil
+          method = mongrel_request.params["REQUEST_METHOD"]
+          variables = nil
+          selected_route = nil
+          uri = Addressable::URI.parse(http_uri)
+          cached_route = self.server.cached_routes[uri_string]
+          if cached_route == nil
+            for route in self.server.routes
+              variables = uri.extract_mapping(route.pattern, route.processor)
+              if variables != nil
+                selected_route = route
+                self.server.cached_routes[uri_string] = selected_route
+                break
+              end
+            end
+          else
+            selected_route = cached_route
+            variables = uri.extract_mapping(
+              selected_route.pattern, selected_route.processor)
           end
-        end
-        if selected_route != nil
-          http_request.variables = variables
-          http_response = selected_route.controller.dispatch_action(
-            http_request, GentleREST::HttpResponse.new)
-        else
-          # No route found.
-          raise NoRouteError,
-            "Unable to service request, no route found matching '#{uri}'."
+          if selected_route != nil
+            http_request.variables = variables
+            http_response = selected_route.controller.dispatch_action(
+              http_request, GentleREST::HttpResponse.new)
+          else
+            # No route found.
+            raise NoRouteError,
+              "Unable to service request, no route found matching '#{uri}'."
+          end
         end
       rescue Exception => error
         begin
@@ -92,6 +113,19 @@ module GentleREST
       end
       
       if http_response != nil
+        if http_response.cache?
+          # This response should be cached.
+          
+          http_host = mongrel_request.params["HTTP_HOST"]
+          http_uri = mongrel_request.params["REQUEST_URI"]
+
+          # TODO: when X_FORWARDED_PROTO is set to "https", change the scheme
+          uri = Addressable::URI.parse("http://#{http_host}#{http_uri}")
+          http_response.uri = uri
+          
+          GentleREST::HttpCache.cache(http_response)
+        end
+        
         # Copies the values over into the Mongrel response object.
         #
         # This is obviously not the most performant option, but the limitation

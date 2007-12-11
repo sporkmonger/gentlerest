@@ -44,6 +44,9 @@ module GentleREST
         @headers[key.strip] = value.strip
       end
       @body = body
+      @history = nil
+      @uri = nil
+      @cache = false
     end
   
     # The status code for the HTTP response.
@@ -124,6 +127,40 @@ module GentleREST
       else
         self.headers["Content-Type"] = "#{self.mime_type};charset=utf-8"
       end
+    end
+    
+    # Returns the redirect history for this response, if any.
+    def history
+      return @history
+    end
+    
+    # Sets the redirect history for this response.
+    def history=(new_history)
+      @history = new_history
+    end
+    
+    # Returns the URI for this resource, if any.
+    def uri
+      return @uri
+    end
+    
+    # Sets the URI for this resource.
+    def uri=(new_uri)
+      @uri = new_uri
+    end
+    
+    # Returns true if this response should be cached.
+    def cache?
+      return @cache
+    end
+    
+    # Set whether or not to cache this response.
+    def cache=(new_cache)
+      if !([true, false].include?(new_cache))
+        raise TypeError,
+          "Expected TrueClass or FalseClass, got #{new_cache.class.name}."
+      end
+      @cache = new_cache
     end
     
     # The body of the HTTP response.

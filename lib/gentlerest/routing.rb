@@ -34,6 +34,14 @@ module GentleREST
       end
       return @routes
     end
+    
+    # Returns a hash mapping uris to known routes.
+    def cached_routes
+      if !defined?(@cached_routes) || @cached_routes.blank?
+        @cached_routes = {}
+      end
+      return @cached_routes
+    end
   end
   
   # This class represents a route from a particular URI to the controller
