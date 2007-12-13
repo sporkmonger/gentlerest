@@ -29,14 +29,18 @@ module GentleREST
     # Initializes the HttpCache.
     def self.startup
       if !defined?(@cache_dir) || @cache_dir == nil
-        if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp"))
-          Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+        if ENV['GENTLE_ROOT'] != nil
+          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+            Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+          end
+          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
+            Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
+          end
+          @cache_dir =
+            File.expand_path(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
+        else
+          @cache_dir = nil
         end
-        if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
-          Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
-        end
-        @cache_dir =
-          File.expand_path(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
       end
     end
     
@@ -44,7 +48,8 @@ module GentleREST
     def self.cache(response)
       # WARNING: For performance reasons, startup is not called from here.
       # However, if startup is not called before this method is executed,
-      # errors will occur.
+      # the cache will be disabled.
+      return nil if !defined?(@cache_dir) || @cache_dir == nil
       
       lookup = Digest::SHA1.hexdigest(response.uri.to_s).to_s[0...36]
       cache_path = File.join(
@@ -73,7 +78,8 @@ module GentleREST
     def self.retrieve(uri)
       # WARNING: For performance reasons, startup is not called from here.
       # However, if startup is not called before this method is executed,
-      # errors will occur.
+      # the cache will be disabled.
+      return nil if @cache_dir == nil
       
       lookup = Digest::SHA1.hexdigest(uri.to_s).to_s[0...36]
       cache_path = File.join(
