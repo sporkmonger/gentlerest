@@ -113,7 +113,7 @@ module GentleREST
       end
       
       if http_response != nil
-        if http_response.cache?
+        if http_response.cache? && ENV['GENTLE_ENV'] != 'development'
           # This response should be cached.
           
           http_host = mongrel_request.params["HTTP_HOST"]
