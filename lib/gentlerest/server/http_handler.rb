@@ -119,8 +119,13 @@ module GentleREST
           http_host = mongrel_request.params["HTTP_HOST"]
           http_uri = mongrel_request.params["REQUEST_URI"]
 
-          # TODO: when X_FORWARDED_PROTO is set to "https", change the scheme
-          uri = Addressable::URI.parse("http://#{http_host}#{http_uri}")
+          # TODO: verify X_FORWARDED_PROTO works
+          scheme = "http"
+          if mongrel_request.params["HTTP_X_FORWARDED_PROTO"] != nil
+            scheme = mongrel_request.params["HTTP_X_FORWARDED_PROTO"].downcase
+          end
+          
+          uri = Addressable::URI.parse("#{scheme}://#{http_host}#{http_uri}")
           http_response.uri = uri
           
           GentleREST::HttpCache.cache(http_response)
