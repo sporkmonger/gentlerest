@@ -30,6 +30,11 @@ module GentleREST
   # an action that can handle the request.
   class NoMatchingActionError < StandardError
   end
+  
+  # Exception raised when a controller cannot find a resource that was
+  # requested.
+  class ResourceNotFoundError < StandardError
+  end
 
   # Exception raised when a named template cannot be found.
   class TemplateLoadError < StandardError

@@ -90,9 +90,9 @@ module GentleREST
       rescue Exception => error
         begin
           case error
-          when GentleREST::NoRouteError
-            status = 404
-          when GentleREST::NoMatchingActionError
+          when GentleREST::NoRouteError,
+              GentleREST::NoMatchingActionError,
+              GentleREST::ResourceNotFoundError
             status = 404
           else
             status = 500
