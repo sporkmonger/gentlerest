@@ -27,7 +27,7 @@ require 'gentlerest/utilities/context'
 module GentleREST
   class BaseController
     ALL_METHODS = [:GET, :HEAD, :POST, :PUT, :DELETE]
-    
+
     # This class represents a stored controller action.
     class ControllerAction
       def initialize(methods, variables, action)
@@ -64,9 +64,28 @@ module GentleREST
       attr_reader :action
     end
     
+    # This class represents a behavioral hook for a controller.
+    class ControllerHook < ControllerAction
+      def initialize(hook, variables, action)
+        if !hook.kind_of?(Symbol)
+          raise TypeError, "The hook must be a Symbol."
+        end
+        super([], variables, action)
+        @hook = hook
+      end
+
+      # Returns the hook name.
+      attr_reader :hook
+    end
+    
     # Returns an Array of actions registered by this controller.
     def self.actions
       return @actions ||= []
+    end
+
+    # Returns an Array of hooks registered by this controller.
+    def self.hooks
+      return @hooks ||= []
     end
     
     # Registers an action on this controller.
@@ -74,6 +93,21 @@ module GentleREST
       self.actions << ControllerAction.new(methods, variables, action)
     end
 
+    # Registers a hook on this controller.
+    def self.hook(hook, variables={}, &action)
+      self.hooks << ControllerHook.new(hook, variables, action)
+    end
+
+    # Registers a before hook on this controller.
+    def self.before(variables={}, &action)
+      self.hooks << ControllerHook.new(:before, variables, action)
+    end
+
+    # Registers an after hook on this controller.
+    def self.after(variables={}, &action)
+      self.hooks << ControllerHook.new(:after, variables, action)
+    end
+    
     # Locates the appropriate action on the controller for this request,
     # then runs the action within a custom execution context.
     def dispatch_action(http_request, http_response)
@@ -105,6 +139,25 @@ module GentleREST
         end
         http_response.render_context = context
 
+        # Find any matching hooks.
+        matching_hooks = []
+        if !self.class.hooks.empty?
+          # Unlike actions, hooks do not need to be in order, because
+          # all matching hooks fire.
+          
+          for hook in self.class.hooks
+            if http_request.variables.merge(hook.variables) ==
+                http_request.variables
+              matching_hooks << hook
+            end
+          end
+          
+          # Execute before hooks.
+          for hook in (matching_hooks.reject { |h| h.hook != :before })
+            hook.action.bind(context).call
+          end
+        end
+        
         # Execute the action Proc within the custom execution context.
         result_body = selected_action.action.bind(context).call
 
@@ -112,6 +165,11 @@ module GentleREST
         # of the Proc was a String, assign its value to the response body.
         if result_body.kind_of?(String) && http_response.body == nil
           http_response.body = result_body
+        end
+
+        # Execute after hooks.
+        for hook in (matching_hooks.reject { |h| h.hook != :after })
+          hook.action.bind(context).call
         end
 
         return http_response

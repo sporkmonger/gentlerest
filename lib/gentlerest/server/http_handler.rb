@@ -57,7 +57,7 @@ module GentleREST
         uri = Addressable::URI.parse("http://#{http_host}#{http_uri}")
         
         http_response = GentleREST::HttpCache.retrieve(uri)
-        if http_response == nil
+        if http_response == nil || ENV['GENTLE_ENV'] == 'development'
           method = mongrel_request.params["REQUEST_METHOD"]
           variables = nil
           selected_route = nil

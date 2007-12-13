@@ -6,6 +6,15 @@ class HelloWorldController < GentleREST::BaseController
 end
 
 class HomeController < GentleREST::BaseController
+  before do
+    response.plain_text
+    @start_time = Time.now
+  end
+  
+  after do
+    @render_time = Time.now - @start_time
+  end
+  
   action([:GET]) do
     response.html
     response.body = <<-HTML
@@ -24,7 +33,6 @@ HTML
   end
 
   action([:GET], "action" => "home") do
-    response.plain_text
     response.body = "Welcome home."
   end
 end
