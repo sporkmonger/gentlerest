@@ -21,6 +21,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require 'gentlerest/templates/template'
+require 'gentlerest/utilities/context'
+
 module GentleREST
   # This is a simple representation of an HTTP response, designed to make
   # JSON serialization as readable as possible.  It exists purely for the
@@ -174,6 +177,27 @@ module GentleREST
         raise TypeError, "Expecting String, got #{new_body.class.name}"
       end
       @body = new_body
+    end
+    
+    # Renders a named template.  
+    def render(template_name, context=self.render_context)
+      self.body = GentleREST::Template.render(template_name, context)
+      return self.body
+    end
+    
+    # Sets the render context for this response.
+    def render_context=(new_render_context)
+      @render_context = new_render_context
+    end
+  
+  protected
+    # Returns the context object for rendering this response.
+    def render_context
+      if defined?(@render_context) && @render_context != nil
+        return @render_context
+      else
+        return Object.new
+      end
     end
   end
 end

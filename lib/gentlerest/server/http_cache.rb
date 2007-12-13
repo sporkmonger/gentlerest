@@ -60,6 +60,9 @@ module GentleREST
         Dir.mkdir(intermediate_path)
       end
       
+      # Ditch the render context before dumping.
+      response.render_context = nil
+      
       File.open(cache_path, "w") do |file|
         file.write(Marshal.dump(response))
       end
@@ -76,8 +79,14 @@ module GentleREST
       cache_path = File.join(
         @cache_dir, lookup.scan(/.{12}/).join("/") + ".http")
       return nil if !File.exists?(cache_path)
-      response = File.open(cache_path, "r") do |file|
-        Marshal.load(file.read)
+      data = File.open(cache_path, "r") do |file|
+        file.read
+      end
+      begin
+        response = Marshal.load(data)
+      rescue ArgumentError
+        File.delete(cache_path) rescue nil
+        return nil
       end
       
       # Don't put the response right back in the cache, it's already there

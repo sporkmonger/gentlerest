@@ -69,9 +69,9 @@
       %h2= error.class.name
     #content
       %p An error has occurred while processing the request:
-      %p= error.message
+      %p=h error.message
       - if error.respond_to?(:backtrace) && error.backtrace != nil
         %p
-          = preformat(error.backtrace.join("\n"))
+          = preformat(h(error.backtrace.join("\n")))
       - else
         %p Backtrace is unavailable.

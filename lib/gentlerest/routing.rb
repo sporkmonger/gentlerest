@@ -44,6 +44,14 @@ module GentleREST
     end
   end
   
+  # This class processes URI templates for Routes.
+  class DefaultRouteProcessor
+    # Returns a pattern for matching variables in Routes.
+    def self.match(name)
+      return "[^/\\n]*"
+    end
+  end
+  
   # This class represents a route from a particular URI to the controller
   # that handles that URI.
   #
@@ -55,6 +63,10 @@ module GentleREST
       @pattern = pattern
       @controller = controller
       @options = options
+      if @options[:processor] == nil
+        # Use the default processor.
+        @options[:processor] = GentleREST::DefaultRouteProcessor
+      end
     end
     
     # Returns the URI Template pattern for the route.

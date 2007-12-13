@@ -27,6 +27,10 @@ require 'gentlerest/haml/filters/oneline'
 require 'gentlerest/controllers/base_controller'
 require 'gentlerest/utilities/indentation'
 
+$TEMPLATE_PATH << File.expand_path(File.join(
+  File.dirname(__FILE__), "/../../../templates"
+))
+
 module GentleREST
   class DefaultResponseController < GentleREST::BaseController
     def initialize(response_status, *objects)
@@ -44,36 +48,18 @@ module GentleREST
       response.status = response_status
       response.xhtml
       response.utf8
-      template_file = File.expand_path(File.join(
-        File.dirname(__FILE__),
-        "/../../../templates/errors/#{response_status}.haml"
-      ))
-      if File.exists?(template_file)
-        template_content = File.open(template_file, "r") do |file|
-          file.read
-        end
-      else
+      begin
+        response.render("errors/#{response_status}")
+      rescue GentleREST::TemplateLoadError
         # Couldn't find the template, time to explode
         response.status = 500
-        template_file = File.expand_path(File.join(
-          File.dirname(__FILE__),
-          "/../../../templates/errors/template_missing.haml"
-        ))
-        if File.exists?(template_file)
-          template_content = File.open(template_file, "r") do |file|
-            file.read
-          end
-        else
+        begin
+          response.render("errors/template_missing")
+        rescue GentleREST::TemplateLoadError
           response.plain_text
-          template_content = "Missing template: #{response_status}.haml"
+          template_content = "Missing template: #{response_status}"
         end
       end
-      response.body = Haml::Engine.new(
-        template_content, {
-          :attr_wrapper => "\"",
-          :filters => {"oneline" => Haml::Filters::OneLine}
-        }
-      ).render(self)
     end
   end
 end

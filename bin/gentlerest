@@ -83,6 +83,9 @@ if ENV['GENTLE_ROOT'] == nil
   end
 end
 
+$TEMPLATE_PATH.unshift(File.join(ENV['GENTLE_ROOT'], "templates"))
+$TEMPLATE_PATH << File.expand_path(".")
+
 case command
 when nil, "usage", "help"
   puts "Usage: gentlerest <command> [options] [environment]"

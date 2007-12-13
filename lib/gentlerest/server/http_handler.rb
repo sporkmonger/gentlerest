@@ -62,13 +62,13 @@ module GentleREST
           variables = nil
           selected_route = nil
           uri = Addressable::URI.parse(http_uri)
-          cached_route = self.server.cached_routes[uri_string]
+          cached_route = self.server.cached_routes[http_uri]
           if cached_route == nil
             for route in self.server.routes
               variables = uri.extract_mapping(route.pattern, route.processor)
               if variables != nil
                 selected_route = route
-                self.server.cached_routes[uri_string] = selected_route
+                self.server.cached_routes[http_uri] = selected_route
                 break
               end
             end
