@@ -1,6 +1,12 @@
 #!/usr/bin/env ruby
 
 lib_path = File.expand_path(File.join(File.dirname(__FILE__), "/../lib"))
+local_vendor_path = File.expand_path("./vendor")
+if File.exists?(File.join(local_vendor_path, "/gentlerest/lib"))
+  $:.unshift(File.expand_path(
+    File.join(local_vendor_path, "/gentlerest/lib")))
+end
+
 $:.unshift(lib_path)
 $:.uniq!
 
