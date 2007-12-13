@@ -25,7 +25,6 @@ require 'rubygems'
 require 'haml'
 require 'gentlerest/haml/filters/oneline'
 require 'gentlerest/controllers/base_controller'
-require 'gentlerest/utilities/indentation'
 
 $TEMPLATE_PATH << File.expand_path(File.join(
   File.dirname(__FILE__), "/../../../templates"
