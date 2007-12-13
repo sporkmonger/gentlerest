@@ -113,6 +113,16 @@ module GentleREST
           "application/xhtml+xml;charset=#{self.encoding}"
       end
     end
+    
+    # Sets the mime type for the response to application/json.
+    def json
+      if self.encoding == nil
+        self.headers["Content-Type"] = "application/json"
+      else
+        self.headers["Content-Type"] =
+          "application/json;charset=#{self.encoding}"
+      end
+    end
 
     # Sets the mime type for the response to text/plain.
     def plain_text
