@@ -4,7 +4,7 @@ $:.unshift(lib_dir)
 $:.unshift(spec_dir)
 
 require "gentlerest"
-require "gentlerest/http/client"
+require "gentlerest/client/http_client"
 require "init_server"
 
 class SpecController < GentleREST::BaseController
@@ -24,14 +24,16 @@ describe GentleREST::Server, "when routing to '/{controller}/'" do
   end
   
   it "should cache the result of routing a request" do
-    response = GentleREST::HTTP.request(:GET, @uri_prefix + "/controller/")
+    response = GentleREST::HttpClient.request(
+      :GET, @uri_prefix + "/controller/")
     response.body.should == "Hello world."
     
     @server.cached_routes["/controller/"].should_not == nil
     @server.cached_routes["/controller/"].pattern.should == "/{controller}/"
 
     # A second request should function exactly as the first one did
-    response = GentleREST::HTTP.request(:GET, @uri_prefix + "/controller/")
+    response = GentleREST::HttpClient.request(
+      :GET, @uri_prefix + "/controller/")
     response.body.should == "Hello world."
   end
   

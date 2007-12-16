@@ -6,7 +6,7 @@ require "gentlerest/server/http_request"
 require "gentlerest/server/http_response"
 
 module GentleREST
-  class HTTP
+  class HttpClient
     # This error is raised whenever a resource is inaccessible over HTTP.
     class AccessError < StandardError
     end
