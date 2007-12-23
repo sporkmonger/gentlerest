@@ -123,6 +123,16 @@ module GentleREST
           "application/json;charset=#{self.encoding}"
       end
     end
+    
+    # Sets the mime type for the response to text/css.
+    def css
+      if self.encoding == nil
+        self.headers["Content-Type"] = "text/css"
+      else
+        self.headers["Content-Type"] =
+          "text/css;charset=#{self.encoding}"
+      end
+    end
 
     # Sets the mime type for the response to text/plain.
     def plain_text

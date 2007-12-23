@@ -97,6 +97,10 @@ module GentleREST
         end
       end
       
+      if path == nil
+        raise ArgumentError, "File not found: #{name.inspect}"
+      end
+      
       # Normalize to symbol
       type = File.extname(path).gsub(/^\./, "").to_s.to_sym
       if !self.types.include?(type)
@@ -138,4 +142,13 @@ GentleREST::Template.register_type(:haml) do |input, context|
       :attr_wrapper => "\""
     }
   ).render(context)
+end
+
+GentleREST::Template.register_type(:sass) do |input, context|
+  Sass::Engine.new(
+    input, {
+      :style => :expanded,
+      :load_paths => $TEMPLATE_PATH
+    }
+  ).render
 end
