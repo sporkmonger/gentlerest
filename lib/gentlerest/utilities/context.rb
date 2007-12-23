@@ -59,6 +59,13 @@ module GentleREST
         :capture_output => false
       }.merge(options)
       @wrapped_object = wrapped_object
+      for var in @wrapped_object.instance_variables
+        next if var == "@wrapped_object"
+        next if var == "@options"
+        next if var == "@output_buffer"
+        value = @wrapped_object.instance_variable_get(var)
+        self.instance_variable_set(var, value)
+      end
       if @options[:capture_output]
         class <<self
           # Output is redirected to the output buffer.

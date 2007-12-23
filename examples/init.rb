@@ -38,7 +38,10 @@ HTML
 end
 
 GentleREST.start do |server|
-  server.routes << GentleREST::Route.new("/hello/", HelloWorldController.new)
-  server.routes << GentleREST::Route.new("/{action}/", HomeController.new)
-  server.routes << GentleREST::Route.new("/", HomeController.new)
+  server.route(
+    "/hello/", HelloWorldController.new, GentleREST::TrailingSlashBuilder)
+  server.route(
+    "/{action}/", HomeController.new, GentleREST::TrailingSlashBuilder)
+  server.route(
+    "/", HomeController.new)
 end

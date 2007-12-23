@@ -117,6 +117,13 @@ module GentleREST
         "<pre>" + x.gsub("\n", "&#x000A;") + "</pre>"
       end
       (class <<context; self; end).send(:define_method, :h) do |text|
+        if !text.kind_of?(String)
+          if text.respond_to?(:to_str)
+            text = text.to_str
+          else
+            text = test.to_s
+          end
+        end
         text.gsub(/\</, "&lt;")
       end
       

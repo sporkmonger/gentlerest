@@ -24,6 +24,8 @@
 require 'rubygems'
 require 'addressable/uri'
 require 'gentlerest/errors'
+require 'gentlerest/routing/builder'
+require 'gentlerest/routing/builders/trailing_slash_builder'
 
 module GentleREST
   class Server
@@ -42,13 +44,40 @@ module GentleREST
       end
       return @cached_routes
     end
+    
+    # Creates one or more new routes with the given RouteBuilder.
+    def route(pattern, controller,
+        builder_class=GentleREST::RouteBuilder, options={})
+      begin
+        builder = builder_class.new(pattern, controller, options)
+      rescue ArgumentError
+        raise ArgumentError,
+          "A RouteBuilder class must take a pattern, a controller, and an " +
+          "options Hash as parameters in its initialize method." 
+      end
+      if builder.respond_to?(:generate)
+        new_routes = builder.generate
+        new_routes.each do |route|
+          if !route.kind_of?(GentleREST::Route)
+            raise TypeError,
+              "Expected GentleREST::Route, got #{route.class.name}."
+          end
+        end
+        self.routes.concat(new_routes)
+        return new_routes
+      else
+        raise TypeError,
+          "An instantiated builder class must respond to the " +
+          ":generate message."
+      end
+    end
   end
   
   # This class processes URI templates for Routes.
   class DefaultRouteProcessor
     # Returns a pattern for matching variables in Routes.
     def self.match(name)
-      return "[^/\\n]*"
+      return "[^/\\n]+"
     end
   end
   

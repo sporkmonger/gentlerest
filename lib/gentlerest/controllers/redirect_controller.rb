@@ -59,7 +59,7 @@ module GentleREST
       # body content.
       default_response_controller =
         GentleREST::DefaultResponseController.new(
-          response.status, location_uri)
+          response.status, location_uri.to_s)
       templated_response = default_response_controller.dispatch_action(
         request, GentleREST::HttpResponse.new)
 
