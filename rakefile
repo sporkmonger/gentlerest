@@ -92,6 +92,7 @@ gem_spec = Gem::Specification.new do |s|
   
   s.add_dependency('rake', '>= 0.7.2')
   s.add_dependency('rspec', '>= 0.7.1')
+  s.add_dependency('haml', '>= 1.7.2')
   s.add_dependency('addressable', '>= 1.0.2')
 
   s.require_path = 'lib'
