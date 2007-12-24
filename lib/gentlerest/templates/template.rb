@@ -98,7 +98,8 @@ module GentleREST
       end
       
       if path == nil
-        raise ArgumentError, "File not found: #{name.inspect}"
+        raise GentleREST::ResourceNotFoundError,
+          "Template not found: #{name.inspect}"
       end
       
       # Normalize to symbol
@@ -131,7 +132,12 @@ module GentleREST
         text.gsub(/\</, "&lt;")
       end
       
-      return self.processor(type).call(raw_content, context)
+      begin
+        return self.processor(type).call(raw_content, context)
+      rescue Exception => e
+        e.message << "\nError occurred while rendering '#{name}'"
+        raise e
+      end
     end
   end
 end
