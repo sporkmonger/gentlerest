@@ -46,8 +46,9 @@ module GentleREST
     end
     
     # Creates one or more new routes with the given RouteBuilder.
-    def route(pattern, controller,
-        builder_class=GentleREST::RouteBuilder, options={})
+    def route(pattern, controller, options={})
+      options[:builder] ||= GentleREST::RouteBuilder
+      builder_class = options[:builder]
       begin
         builder = builder_class.new(pattern, controller, options)
       rescue ArgumentError
