@@ -43,6 +43,7 @@ module GentleREST
       response.body = File.open(file_path, "r") do |file|
         file.read
       end
+      response.cached = true
       return nil
     end
   end
