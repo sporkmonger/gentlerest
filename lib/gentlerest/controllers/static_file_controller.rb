@@ -23,6 +23,7 @@
 
 require 'rubygems'
 require 'addressable/uri'
+require 'mime/types'
 require 'gentlerest/controllers/base_controller'
 
 module GentleREST
