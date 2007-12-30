@@ -40,7 +40,7 @@ module GentleREST
     attr_reader :response_status
     attr_reader :objects
 
-    action(ALL_METHODS) do
+    action ALL_METHODS do
       # We definitely do not want to cache this response.
       response.cache = false
       

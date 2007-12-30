@@ -34,7 +34,7 @@ module GentleREST
 
     attr_reader :path_pattern
 
-    action(ALL_METHODS) do
+    action [:GET] do
       response.status = 200
       path_uri = Addressable::URI.expand_template(
         @path_pattern, request.variables)
@@ -43,7 +43,7 @@ module GentleREST
       response.body = File.open(file_path, "r") do |file|
         file.read
       end
-      response.cached = true
+      response.cache = true
       return nil
     end
   end

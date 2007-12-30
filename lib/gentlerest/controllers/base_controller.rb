@@ -90,6 +90,8 @@ module GentleREST
     
     # Registers an action on this controller.
     def self.action(methods=[:GET], variables={}, &action)
+      methods = [methods] if methods.kind_of?(Symbol)
+      methods = methods.flatten
       self.actions << ControllerAction.new(methods, variables, action)
     end
 

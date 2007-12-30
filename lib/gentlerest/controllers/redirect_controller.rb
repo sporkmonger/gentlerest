@@ -36,7 +36,7 @@ module GentleREST
     attr_reader :location_pattern
     attr_reader :redirect_type
 
-    action(ALL_METHODS) do
+    action ALL_METHODS do
       case @redirect_type
       when :permanent
         response.status = 301
