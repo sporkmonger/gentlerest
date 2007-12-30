@@ -81,7 +81,7 @@ module GentleREST
             if selected_route.variables != nil
               # Merge variables given in route with those extracted
               # from the URI.
-              variables = variables.merge(selected_route.options[:variables])
+              variables = variables.merge(selected_route.variables)
             end
             http_request.variables = variables
             http_response = selected_route.controller.dispatch_action(
