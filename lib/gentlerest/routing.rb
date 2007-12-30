@@ -97,6 +97,9 @@ module GentleREST
         # Use the default processor.
         @options[:processor] = GentleREST::DefaultRouteProcessor
       end
+      if @options[:variables] == nil
+        @options[:variables] = {}
+      end
     end
     
     # Returns the URI Template pattern for the route.
@@ -119,6 +122,11 @@ module GentleREST
     # Sets the URI Template processor object.
     def processor=(new_processor)
       @options[:processor] = new_processor
+    end
+
+    # Returns the variables that were specified for this route.
+    def variables
+      return @options[:variables]
     end
 
     # Inspects the internal state of the route.
