@@ -21,6 +21,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require "gentlerest/utilities/normalize"
+
 module GentleREST
   # This is a simple representation of an HTTP request, designed to make
   # inspecting a request as simple as possible.  It should only be
@@ -30,10 +32,21 @@ module GentleREST
     def initialize(mongrel_request)
       @mongrel_request = mongrel_request
       @variables = {}
+      @headers = {}
+      for key, value in @mongrel_request.params
+        if key =~ /^HTTP_/
+          header_name = GentleREST::Normalization.http_header_normalize(
+            key[5..-1].split(/[\-_]/).join("-"))
+          @headers[header_name] = value
+        end
+      end
     end
     
     # Returns the wrapped Mongrel request object.
     attr_reader :mongrel_request
+    
+    # Returns the normalized request headers.
+    attr_reader :headers
 
     # Returns the HTTP method as a Symbol object.
     def method

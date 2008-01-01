@@ -2,6 +2,7 @@ require "net/http"
 require "addressable/uri"
 require "gentlerest/version"
 require "gentlerest/utilities/blank"
+require "gentlerest/utilities/normalize"
 require "gentlerest/server/http_request"
 require "gentlerest/server/http_response"
 
@@ -87,9 +88,8 @@ module GentleREST
           http_response = GentleREST::HttpResponse.new
           http_response.status = response.code.to_i
           response.each_header do |header, value|
-            corrected_header = (header.split("-").map do |h|
-              h.capitalize
-            end).join("-")
+            corrected_header = 
+              GentleREST::Normalization.http_header_normalize(header)
             http_response.headers[corrected_header] = value
           end
           http_response.body = response.body

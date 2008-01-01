@@ -21,8 +21,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'gentlerest/templates/template'
-require 'gentlerest/utilities/context'
+require "gentlerest/templates/template"
+require "gentlerest/utilities/context"
+require "gentlerest/utilities/normalize"
 
 module GentleREST
   # This is a simple representation of an HTTP response, designed to make
@@ -43,7 +44,7 @@ module GentleREST
       @status = status
       @headers = {}
       for key, value in headers
-        key = (key.split("-").collect { |str| str.capitalize }).join("-")
+        key = GentleREST::Normalization.http_header_normalize(key)
         @headers[key.strip] = value.strip
       end
       @body = body
@@ -186,6 +187,34 @@ module GentleREST
       @cache = new_cache
     end
     
+    # This method autogenerates a 304 Not Modified response if the 
+    # SHA1 of the comparison object's hash matches the If-Modified
+    # header of the request.  Returns the status code used in the
+    # response.
+    def if_modified(object=self.body, &block)
+      request = self.render_context.request
+      if_modified_header = request.headers["If-Modified"]
+      if object == nil
+        if self.body == nil
+          raise ArgumentError,
+            "The body is the default comparison object. " +
+            "Comparison object cannot be nil."
+        else
+          raise ArgumentError, "Comparison object cannot be nil."
+        end
+      end
+      etag = Digest::SHA1.hexdigest(object.hash.to_s)
+      self.headers["ETag"] = etag
+      if etag == if_modified_header
+        # Content is identical.
+        self.status = 304
+        self.body = ""
+      elsif block != nil
+        block.call
+      end
+      return self.status
+    end
+    
     # The body of the HTTP response.
     def body
       return @body
@@ -193,7 +222,7 @@ module GentleREST
     
     # Sets the body of the HTTP response.
     def body=(new_body)
-      if !new_body.kind_of?(String)
+      if !new_body.kind_of?(String) && new_body != nil
         raise TypeError, "Expecting String, got #{new_body.class.name}"
       end
       @body = new_body
