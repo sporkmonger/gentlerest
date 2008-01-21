@@ -47,6 +47,7 @@ module GentleREST
         key = GentleREST::Normalization.http_header_normalize(key)
         @headers[key.strip] = value.strip
       end
+      @layout = nil
       @body = body
       @history = nil
       @uri = nil
@@ -228,9 +229,32 @@ module GentleREST
       @body = new_body
     end
     
+    # Assigns a layout to this response.  Calling this method multiple
+    # times will cause the assigned layout to be overwritten with the
+    # layout from the second call.
+    #
+    # Layouts are not rendered until the <code>render</code> method is called.
+    # 
+    # The method <code>inner_content</code> should be called from within
+    # the layout template to render the inner template.
+    def layout(template_name, context=self.render_context)
+      @layout = [template_name, context]
+      return true
+    end
+    
     # Renders a named template.  
     def render(template_name, context=self.render_context)
-      self.body = GentleREST::Template.render(template_name, context)
+      if @layout == nil
+        self.body = GentleREST::Template.render(template_name, context)
+      else
+        outer_template, outer_context = @layout
+        self.body = GentleREST::Template.render(
+          outer_template, outer_context, {
+            :inner_template => template_name,
+            :inner_context => context
+          }
+        )
+      end
       return self.body
     end
     

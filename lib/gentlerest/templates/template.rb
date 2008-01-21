@@ -78,7 +78,7 @@ module GentleREST
     # optionally take a context to 
     #
     # Raises an ArgumentError if the type is invalid.
-    def self.render(name, context=Object.new)
+    def self.render(name, context=Object.new, options={})
       # Locate the template.
       path = nil
       for load_path in $TEMPLATE_PATH
@@ -117,6 +117,10 @@ module GentleREST
       # Add template methods to Context.
       if !context.kind_of?(GentleREST::Context)
         context = GentleREST::Context.new(context, :capture_output => false)
+      end
+      (class <<context; self; end).send(:define_method, :inner_content) do
+        GentleREST::Template.render(
+          options[:inner_template], options[:inner_context])
       end
       (class <<context; self; end).send(:define_method, :preformat) do |x|
         "<pre>" + x.gsub("\n", "&#x000A;") + "</pre>"
