@@ -114,23 +114,30 @@ module GentleREST
     # then runs the action within a custom execution context.
     def dispatch_action(http_request, http_response)
       selected_action = nil
-      
-      # Actions need to be in order, largest variable hash first, otherwise
-      # the default action might always fire even when a better match is
-      # available.
-      sorted_actions = self.class.actions.sort do |a, b|
-        b.variables.size <=> a.variables.size
-      end
-      
-      for action in sorted_actions
-        if http_request.variables.merge(action.variables) ==
-            http_request.variables &&
-            action.methods.include?(http_request.method)
-          selected_action = action
-          break
+
+      # We don't want ancestor classes to overwrite existing actions.
+      for klass in self.class.ancestors
+        break if !klass.respond_to?(:actions)
+
+        # Actions need to be in order, largest variable hash first, otherwise
+        # the default action might always fire even when a better match is
+        # available.
+        sorted_actions = klass.actions.sort do |a, b|
+          b.variables.size <=> a.variables.size
         end
+
+        for action in sorted_actions
+          if http_request.variables.merge(action.variables) ==
+              http_request.variables &&
+              action.methods.include?(http_request.method)
+            selected_action = action
+            break
+          end
+        end
+        break if selected_action != nil
       end
-      
+
+
       if selected_action != nil
         context = GentleREST::Context.new(self, :capture_output => false)
         (class <<context; self; end).send(:define_method, :request) do
@@ -147,13 +154,20 @@ module GentleREST
           # Unlike actions, hooks do not need to be in order, because
           # all matching hooks fire.
           
-          for hook in self.class.hooks
+          # Load all hooks, including those from parent classes.
+          hook_set = []
+          for klass in self.class.ancestors
+            break if !klass.respond_to?(:hooks)
+            hook_set.concat(klass.hooks)
+          end
+
+          for hook in hook_set
             if http_request.variables.merge(hook.variables) ==
                 http_request.variables
               matching_hooks << hook
             end
           end
-          
+
           # Execute before hooks.
           for hook in (matching_hooks.reject { |h| h.hook != :before })
             hook.action.bind(context).call
