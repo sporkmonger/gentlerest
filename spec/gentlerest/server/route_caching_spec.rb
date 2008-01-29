@@ -7,7 +7,7 @@ require "gentlerest"
 require "gentlerest/client/http_client"
 require "init_server"
 
-class SpecController < GentleREST::BaseController
+class RouteCachingController < GentleREST::BaseController
   action([:GET]) do
     response.plain_text
     response.body = "Hello world."
@@ -19,7 +19,7 @@ describe GentleREST::Server, "when routing to '/{controller}/'" do
     @server = GentleREST.server(:default)
     @server.routes.clear
     @server.routes << GentleREST::Route.new(
-      "/{controller}/", SpecController.new)
+      "/{controller}/", RouteCachingController.new)
     @uri_prefix = "http://#{@server.address}:#{@server.port}"
   end
   
