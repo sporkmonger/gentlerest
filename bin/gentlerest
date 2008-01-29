@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+$PROFILE = false
+
 lib_path = File.expand_path(File.join(File.dirname(__FILE__), "/../lib"))
 local_vendor_path = File.expand_path("./vendor")
 if File.exists?(File.join(local_vendor_path, "/gentlerest/lib"))
@@ -92,31 +94,48 @@ end
 $TEMPLATE_PATH.unshift(File.join(ENV['GENTLE_ROOT'], "templates"))
 $TEMPLATE_PATH << File.expand_path(".")
 
+module GentleREST
+  module CommandLine
+    def self.profile(address, port, name)
+      $PROFILE = true
+      return self.start(address, port, name)
+    end
+    
+    def self.start(address, port, name)
+      # TODO: set up daemon here
+
+      init_script = File.expand_path(
+        File.join(ENV['GENTLE_ROOT'], "config/init.rb"))
+
+      GentleREST.default_options[:port] = port
+      GentleREST.default_options[:address] = address
+      GentleREST.default_options[:name] = name
+
+      load(init_script)
+
+      server = GentleREST.server(name)
+
+      puts "Server running at #{server.address} on port #{server.port}."
+
+      # Wait for the thread to shut down.
+      server.mongrel_instance.acceptor.join
+    end
+  end
+end
+
 case command
 when nil, "usage", "help"
   puts "Usage: gentlerest <command> [options] [environment]"
-when "start"
-  port = command_arguments["--port"].to_i
+when "profile"
   address = command_arguments["--address"]
+  port = command_arguments["--port"].to_i
   name = command_arguments["--name"].to_sym
-
-  # TODO: set up daemon here
-  
-  init_script = File.expand_path(
-    File.join(ENV['GENTLE_ROOT'], "config/init.rb"))
-
-  GentleREST.default_options[:port] = port
-  GentleREST.default_options[:address] = address
-  GentleREST.default_options[:name] = name
-  
-  load(init_script)
-  
-  server = GentleREST.server(name)
-  
-  puts "Server running at #{server.address} on port #{server.port}."
-  
-  # Wait for the thread to shut down.
-  server.mongrel_instance.acceptor.join
+  GentleREST::CommandLine.profile(address, port, name)
+when "start"
+  address = command_arguments["--address"]
+  port = command_arguments["--port"].to_i
+  name = command_arguments["--name"].to_sym
+  GentleREST::CommandLine.start(address, port, name)
 else
   puts "Invalid command: #{command.inspect}"
   puts
