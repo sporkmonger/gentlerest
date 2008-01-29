@@ -97,7 +97,15 @@ $TEMPLATE_PATH << File.expand_path(".")
 module GentleREST
   module CommandLine
     def self.profile(address, port, name)
+      begin
+        require 'ruby-prof'
+      rescue LoadError
+        warn("The ruby-prof gem is not installed.  Cannot profile.")
+        exit
+      end
+      
       $PROFILE = true
+      puts "Profiling enabled."
       return self.start(address, port, name)
     end
     
