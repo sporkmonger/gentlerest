@@ -47,6 +47,10 @@ module GentleREST
     end
     
     def process(mongrel_request, mongrel_response)
+      if $PROFILE == true
+        require 'ruby-prof'
+        RubyProf.start
+      end
       http_response = nil
       http_request = GentleREST::HttpRequest.new(mongrel_request)
       begin
@@ -154,6 +158,37 @@ module GentleREST
         mongrel_response.body << "Fatal Error."
       end
 
+      if $PROFILE == true
+        result = RubyProf.stop
+        if ENV["PROFILE_PRINTER"] == "html"
+          printer = RubyProf::GraphHtmlPrinter.new(result)
+
+          if ENV['GENTLE_ROOT'] != nil
+            if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+              Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+            end
+            if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
+              Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
+            end
+            profile_dir =
+              File.expand_path(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
+          else
+            warn(
+              "Could not find profile directory.  " +
+              "Root directory was not set."
+            )
+            exit
+          end
+
+          output_filename = (Time.now.to_f * 10000).to_i.to_s + ".html"
+          File.open(File.join(profile_dir, output_filename), "w") do |file|
+            printer.print(file, 2)
+          end
+        else
+          printer = RubyProf::FlatPrinter.new(result)
+          printer.print(STDOUT, 2)
+        end
+      end
       return nil
     end
   end
