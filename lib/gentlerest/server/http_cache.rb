@@ -65,8 +65,8 @@ module GentleREST
         Dir.mkdir(intermediate_path)
       end
       
-      # Ditch the render context before dumping.
-      response.render_context = nil
+      # Ditch context objects before dumping.
+      response.disable_rendering()
       
       File.open(cache_path, "w") do |file|
         file.write(Marshal.dump(response))

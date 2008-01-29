@@ -52,6 +52,7 @@ module GentleREST
       @history = nil
       @uri = nil
       @cache = false
+      @render_disabled = false
     end
   
     # The status code for the HTTP response.
@@ -244,6 +245,10 @@ module GentleREST
     
     # Renders a named template.  
     def render(template_name, context=self.render_context)
+      if @render_disabled == true
+        raise GentleREST::CachingError,
+          "Rendering has been disabled because this response was cached."
+      end
       if @layout == nil
         self.body = GentleREST::Template.render(template_name, context)
       else
@@ -263,6 +268,12 @@ module GentleREST
       @render_context = new_render_context
     end
   
+    def disable_rendering
+      @render_context = nil
+      @layout = nil
+      @render_disabled = true
+    end
+    
   protected
     # Returns the context object for rendering this response.
     def render_context

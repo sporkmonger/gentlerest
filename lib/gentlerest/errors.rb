@@ -39,4 +39,8 @@ module GentleREST
   # Exception raised when a named template cannot be found.
   class TemplateLoadError < StandardError
   end
+
+  # Exception raised when a named template cannot be found.
+  class CachingError < StandardError
+  end
 end
