@@ -182,11 +182,11 @@ module GentleREST
 
           output_filename = (Time.now.to_f * 10000).to_i.to_s + ".html"
           File.open(File.join(profile_dir, output_filename), "w") do |file|
-            printer.print(file, 2)
+            printer.print(file, 0)
           end
         else
           printer = RubyProf::FlatPrinter.new(result)
-          printer.print(STDOUT, 2)
+          printer.print(STDOUT, 0)
         end
       end
       return nil
