@@ -21,12 +21,12 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'gentlerest/server/http_response'
-require 'digest/sha1'
+require "gentlerest/http/response"
+require "digest/sha1"
 
 module GentleREST
-  class HttpCache
-    # Initializes the HttpCache.
+  class HttpResponseCache
+    # Initializes the HttpResponseCache.
     def self.startup
       if !defined?(@cache_dir) || @cache_dir == nil
         if ENV['GENTLE_ROOT'] != nil
@@ -45,13 +45,13 @@ module GentleREST
     end
     
     # Puts a response into the cache.
-    def self.cache(response)
+    def self.cache(uri, response)
       # WARNING: For performance reasons, startup is not called from here.
       # However, if startup is not called before this method is executed,
       # the cache will be disabled.
       return nil if !defined?(@cache_dir) || @cache_dir == nil
       
-      lookup = Digest::SHA1.hexdigest(response.uri.to_s).to_s[0...36]
+      lookup = Digest::SHA1.hexdigest(uri.to_s).to_s[0...36]
       cache_path = File.join(
         @cache_dir, lookup.scan(/.{12}/).join("/") + ".http")
       

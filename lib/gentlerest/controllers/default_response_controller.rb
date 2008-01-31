@@ -21,10 +21,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'rubygems'
-require 'haml'
-require 'gentlerest/haml/filters/oneline'
-require 'gentlerest/controllers/base_controller'
+require "rubygems"
+require "gentlerest/controllers/base_controller"
 
 $TEMPLATE_PATH << File.expand_path(File.join(
   File.dirname(__FILE__), "/../../../templates"

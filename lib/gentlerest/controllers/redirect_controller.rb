@@ -21,10 +21,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'rubygems'
-require 'haml'
-require 'addressable/uri'
-require 'gentlerest/controllers/base_controller'
+require "rubygems"
+require "addressable/uri"
+require "gentlerest/controllers/base_controller"
 
 module GentleREST
   class RedirectController < GentleREST::BaseController

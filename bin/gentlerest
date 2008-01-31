@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 
+# Note, huge swaths of this file are borrowed from the Rack project.
+# End result is an ugly piece of work, but much easier to use than the
+# rackup command, while still being effectively interoperable.  IMHO, YMMV.
+
 $PROFILE = false
 
 lib_path = File.expand_path(File.join(File.dirname(__FILE__), "/../lib"))
@@ -12,11 +16,18 @@ end
 $:.unshift(lib_path)
 $:.uniq!
 
-require 'gentlerest'
-require 'rubygems'
+require "gentlerest"
+require "rubygems"
+require "rack"
+require "optparse"
 
 command = ARGV.shift
 
+# Default to a development environment
+ENV['ENVIRONMENT'] = 'development' if ENV['ENVIRONMENT'] == nil
+
+# Process any environment variables set on the command line
+# before we do anything else.
 i = 0
 loop do
   break if ARGV.empty?
@@ -32,41 +43,73 @@ loop do
   break if i >= ARGV.size
 end
 
-# Default to a development environment
-ENV['GENTLE_ENV'] = 'development' if ENV['GENTLE_ENV'] == nil
+automatic = false
+server = nil
+options = {:Port => 3000, :Host => "0.0.0.0", :AccessLog => []}
 
-i = 0
-command_arguments = {
-  "--port" => "3000",
-  "--address" => "0.0.0.0",
-  "--name" => "default"
+opts = OptionParser.new("", 24, '  ') { |opts|
+  opts.banner =
+    "Usage: gentlerest <command> [ruby options] [rack options] " +
+    "[VARIABLE=value]"
+
+  opts.separator ""
+  opts.separator "Ruby options:"
+
+  lineno = 1
+  opts.on("-e", "--eval LINE", "evaluate a LINE of code") { |line|
+    eval(line, TOPLEVEL_BINDING, "-e", lineno)
+    lineno += 1
+  }
+
+  opts.on("-d", "--debug", "set debugging flags (set $DEBUG to true)") {
+    $DEBUG = true
+  }
+  
+  opts.on("-w", "--warn", "turn warnings on for your script") {
+    $-w = true
+  }
+
+  opts.on("-I", "--include PATH",
+          "specify $LOAD_PATH (may be used more than once)") { |path|
+    $LOAD_PATH.unshift(*path.split(":"))
+  }
+
+  opts.on("-r", "--require LIBRARY",
+          "require the library, before executing your script") { |library|
+    require library
+  }
+
+  opts.separator ""
+  opts.separator "Rack options:"
+  opts.on("-s", "--server SERVER", "serve using SERVER") { |s|
+    server = s
+  }
+
+  opts.on("-o", "--host HOST", "listen on HOST (default: 0.0.0.0)") { |host|
+    options[:Host] = host
+  }
+
+  opts.on("-p", "--port PORT", "use PORT (default: 9292)") { |port|
+    options[:Port] = port
+  }
+
+  opts.on("-E", "--env ENVIRONMENT",
+      "use ENVIRONMENT for defaults (default: #{ENV['ENVIRONMENT']})") { |e|
+    ENV['ENVIRONMENT'] = e
+  }
+
+  opts.separator ""
+  opts.separator "Available commands:"
+  opts.separator ""
+  opts.separator "start"
+  opts.separator "stop"
+  opts.separator "restart"
+  opts.separator "profile"
+  opts.separator "console"
+  opts.separator "create"
+  opts.separator "version"
+  opts.separator "help"
 }
-loop do
-  break if ARGV.empty?
-  var = ARGV[i].dup
-  var.gsub!(/^-p$/, "--port")
-  var.gsub!(/^-a$/, "--address")
-  var.gsub!(/^-n$/, "--name")
-  if var =~ /^\-.*$/
-    command_arguments[var] = true
-    ARGV.delete_at(i)
-    if ARGV[i][0] != "-" && ARGV[i][0] != 45
-      command_arguments[var] = ARGV[i]
-      ARGV.delete_at(i)
-    end
-  else
-    i += 1
-  end
-  break if i >= ARGV.size
-end
-
-if !ARGV.empty?
-  puts "Invalid options:"
-  puts ARGV.join(" ")
-  puts
-  puts "For help using this application: gentlerest help"
-  exit
-end
 
 if ENV['GENTLE_ROOT'] == nil
   # Find root directory
@@ -91,59 +134,142 @@ if ENV['GENTLE_ROOT'] == nil
   end
 end
 
-$TEMPLATE_PATH.unshift(File.join(ENV['GENTLE_ROOT'], "templates"))
-$TEMPLATE_PATH << File.expand_path(".")
+# Hunt down the config script.  It can either be in the GENTLE_ROOT
+# directory or in GENTLE_ROOT/config.
+init_script = File.expand_path(
+  File.join(ENV['GENTLE_ROOT'], "config.ru"))
+if !File.exist?(init_script)
+  init_script = File.expand_path(
+    File.join(ENV['GENTLE_ROOT'], "config/config.ru"))
+end
+if !File.exist?(init_script)
+  abort("Configuration 'config.ru' not found.")
+end
 
-module GentleREST
-  module CommandLine
-    def self.profile(address, port, name)
-      begin
-        require 'ruby-prof'
-      rescue LoadError
-        warn("The ruby-prof gem is not installed.  Cannot profile.")
-        exit
-      end
-      
-      $PROFILE = true
-      puts "Profiling enabled."
-      return self.start(address, port, name)
-    end
-    
-    def self.start(address, port, name)
-      # TODO: set up daemon here
+config_file = File.read(init_script)
 
-      init_script = File.expand_path(
-        File.join(ENV['GENTLE_ROOT'], "config/init.rb"))
-
-      GentleREST.default_options[:port] = port
-      GentleREST.default_options[:address] = address
-      GentleREST.default_options[:name] = name
-
-      load(init_script)
-
-      server = GentleREST.server(name)
-
-      puts "Server running at #{server.address} on port #{server.port}."
-
-      # Wait for the thread to shut down.
-      server.mongrel_instance.acceptor.join
-    end
+# If the config file contained a #\ line, add those parameters to the
+# arguments array.
+if config_file[/^#\\(.*)/]
+  begin
+    opts.parse!($1.split(/\s+/))
+  rescue OptionParser::InvalidOption => e
+    STDERR.puts("While parsing options in 'config.ru':")
+    abort(e.message)
   end
 end
 
+begin
+  opts.parse!(ARGV)
+rescue OptionParser::InvalidOption => e
+  abort(e.message)
+end
+
+if !ARGV.empty?
+  puts "Invalid options:"
+  puts ARGV.join(" ")
+  puts
+  puts "For help using this application: gentlerest help"
+  exit
+end
+
+# By default, the GENTLE_ROOT/templates directory is where you put your
+# templates.  If it exists, we want to add it to the $TEMPLATE_PATH.
+if File.exist?(File.join(ENV['GENTLE_ROOT'], "templates"))
+  $TEMPLATE_PATH.unshift(File.join(ENV['GENTLE_ROOT'], "templates"))
+end
+$TEMPLATE_PATH << File.expand_path(".")
+
+start_proc = lambda do
+  inner_app = eval(
+    "Rack::Builder.new {( " + config_file + "\n )}.to_app",
+    nil, init_script
+  )
+
+  case server
+  when nil
+    # Guess.
+    if ENV.include?("PHP_FCGI_CHILDREN")
+      server = Rack::Handler::FastCGI
+    elsif ENV.include?("REQUEST_METHOD")
+      server = Rack::Handler::CGI
+    else
+      begin
+        server = Rack::Handler::Mongrel
+      rescue LoadError => e
+        server = Rack::Handler::WEBrick
+      end
+    end
+  when "mongrel"
+    server = Rack::Handler::Mongrel
+  when "webrick"
+    server = Rack::Handler::WEBrick
+  when "cgi"
+    server = Rack::Handler::CGI
+  when "fastcgi"
+    server = Rack::Handler::FastCGI
+  else
+    server = Rack::Handler.const_get(server.capitalize)
+  end
+
+  if $DEBUG
+    require "pp"
+    puts "server:"
+    pp server
+  end
+
+  case ENV["ENVIRONMENT"]
+  when "development"
+    app = Rack::Builder.new {
+      use Rack::CommonLogger, STDERR unless server.name =~ /CGI/
+      use Rack::ShowExceptions
+      use Rack::Reloader
+      use Rack::Lint
+      run inner_app
+    }.to_app
+  when "deployment", "production"
+    app = Rack::Builder.new {
+      use Rack::CommonLogger, STDERR unless server.name =~ /CGI/
+      run inner_app
+    }.to_app
+  else
+    app = inner_app
+  end
+
+  if $DEBUG
+    require "pp"
+    puts "app:"
+    pp app
+    puts "inner_app:"
+    pp inner_app
+  end
+
+  puts (
+    "Starting #{server} " +
+    "at #{options[:Host]} on port #{options[:Port]}."
+  )
+  server.run app, options
+end
+
+profile_proc = lambda do
+  begin
+    require "ruby-prof"
+  rescue LoadError
+    abort("The ruby-prof gem is not installed.  Cannot profile.")
+  end
+  
+  $PROFILE = true
+  puts "Profiling enabled."
+  start_proc.call
+end
+
 case command
-when nil, "usage", "help"
-  puts "Usage: gentlerest <command> [options] [environment]"
+when nil, "usage", "help", "-h", "--help"
+  puts opts
 when "profile"
-  address = command_arguments["--address"]
-  port = command_arguments["--port"].to_i
-  name = command_arguments["--name"].to_sym
-  GentleREST::CommandLine.profile(address, port, name)
+  profile_proc.call
 when "start"
-  address = command_arguments["--address"]
-  port = command_arguments["--port"].to_i
-  name = command_arguments["--name"].to_sym
-  GentleREST::CommandLine.start(address, port, name)
+  start_proc.call
 else
   puts "Invalid command: #{command.inspect}"
   puts

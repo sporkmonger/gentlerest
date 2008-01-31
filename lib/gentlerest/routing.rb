@@ -21,15 +21,16 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'rubygems'
-require 'addressable/uri'
-require 'gentlerest/errors'
-require 'gentlerest/routing/builder'
-require 'gentlerest/routing/builders/trailing_slash_builder'
+require "rubygems"
+require "addressable/uri"
+require "gentlerest/errors"
+require "gentlerest/instance"
+require "gentlerest/routing/builder"
+require "gentlerest/routing/builders/trailing_slash_builder"
 
 module GentleREST
-  class Server
-    # Returns the list of all routes registered with a server.
+  class Instance
+    # Returns the list of all routes registered with an instance.
     def routes
       if !defined?(@routes) || @routes.blank?
         @routes = []

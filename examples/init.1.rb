@@ -1,7 +1,7 @@
-require 'rubygems'
-require 'gentlerest'
-require 'applications/sporkblog'
-require 'applications/sporkfed'
+require "rubygems"
+require "gentlerest"
+require "applications/sporkblog"
+require "applications/sporkfed"
 
 GentleREST.start do |server|
   Sporkblog.new(server, "/blog/")

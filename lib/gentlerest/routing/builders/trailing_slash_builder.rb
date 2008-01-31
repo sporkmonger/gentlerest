@@ -21,7 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'gentlerest/routing'
+require "gentlerest/routing"
 
 module GentleREST
   # This class builds routes that redirect from URIs without trailing slashes

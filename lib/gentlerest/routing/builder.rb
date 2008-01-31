@@ -21,7 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'gentlerest/routing'
+require "gentlerest/routing"
 
 module GentleREST
   # This class functions as the default route builder, as well as the base

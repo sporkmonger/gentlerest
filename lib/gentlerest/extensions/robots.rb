@@ -21,7 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require "gentlerest/server/http_request"
+require "gentlerest/http/request"
 
 module GentleREST
   class HttpRequest

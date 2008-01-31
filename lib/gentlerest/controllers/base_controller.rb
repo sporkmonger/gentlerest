@@ -21,8 +21,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'gentlerest/errors'
-require 'gentlerest/utilities/context'
+require "gentlerest/errors"
+require "gentlerest/http/response"
+require "gentlerest/utilities/context"
 
 module GentleREST
   class BaseController

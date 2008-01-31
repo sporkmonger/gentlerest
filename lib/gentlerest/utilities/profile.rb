@@ -21,24 +21,39 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-$:.unshift(File.expand_path(File.dirname(__FILE__)))
-$: << File.expand_path(File.join(
-  File.dirname(__FILE__), "/../vendor/mime_types/lib"))
-$:.uniq!
+module GentleREST
+  module ProfileWriter
+    def self.write(result)
+      require "ruby-prof"
 
-require "rubygems"
-require "rack"
-require "gentlerest/version"
-require "gentlerest/errors"
-require "gentlerest/utilities/bind"
-require "gentlerest/utilities/blank"
-require "gentlerest/http/request"
-require "gentlerest/http/response"
-require "gentlerest/instance"
-require "gentlerest/rack/gentlerest_adapter"
-require "gentlerest/routing"
-require "gentlerest/templates/template"
-require "gentlerest/controllers/base_controller"
-require "gentlerest/controllers/default_response_controller"
-require "gentlerest/controllers/redirect_controller"
-require "gentlerest/controllers/static_file_controller"
+      if ENV["PROFILE_PRINTER"] == "html"
+        printer = RubyProf::GraphHtmlPrinter.new(result)
+
+        if ENV['GENTLE_ROOT'] != nil
+          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+            Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+          end
+          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
+            Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
+          end
+          profile_dir =
+            File.expand_path(
+              File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
+        else
+          abort(
+            "Could not find profile directory.  " +
+            "Root directory was not set."
+          )
+        end
+
+        output_filename = (Time.now.to_f * 10000).to_i.to_s + ".html"
+        File.open(File.join(profile_dir, output_filename), "w") do |file|
+          printer.print(file, 0)
+        end
+      else
+        printer = RubyProf::FlatPrinter.new(result)
+        printer.print(STDOUT, 0)
+      end
+    end
+  end
+end

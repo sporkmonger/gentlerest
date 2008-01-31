@@ -21,16 +21,16 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'rubygems'
-require 'mongrel'
-require 'gentlerest/version'
-require 'gentlerest/utilities/blank'
-require 'gentlerest/server'
-require 'gentlerest/server/http_request'
-require 'gentlerest/server/http_response'
-require 'gentlerest/server/http_cache'
-require 'gentlerest/controllers/default_response_controller'
-require 'gentlerest/controllers/redirect_controller'
+require "rubygems"
+require "mongrel"
+require "gentlerest/version"
+require "gentlerest/utilities/blank"
+require "gentlerest/server"
+require "gentlerest/server/http_request"
+require "gentlerest/server/http_response"
+require "gentlerest/server/http_cache"
+require "gentlerest/controllers/default_response_controller"
+require "gentlerest/controllers/redirect_controller"
 
 module GentleREST
   # This is a specialized Mongrel http handler for GentleREST.
@@ -39,7 +39,7 @@ module GentleREST
       @server = server
       
       # Initialize the http cache.
-      GentleREST::HttpCache.startup()
+      GentleREST::HttpResponseCache.startup()
     end
     
     def server
@@ -48,7 +48,7 @@ module GentleREST
     
     def process(mongrel_request, mongrel_response)
       if $PROFILE == true
-        require 'ruby-prof'
+        require "ruby-prof"
         RubyProf.start
       end
       http_response = nil
@@ -60,8 +60,8 @@ module GentleREST
         # TODO: when X_FORWARDED_PROTO is set to "https", change the scheme
         uri = Addressable::URI.parse("http://#{http_host}#{http_uri}")
         
-        http_response = GentleREST::HttpCache.retrieve(uri)
-        if http_response == nil || ENV['GENTLE_ENV'] == 'development'
+        http_response = GentleREST::HttpResponseCache.retrieve(uri)
+        if http_response == nil || ENV['ENVIRONMENT'] == 'development'
           method = mongrel_request.params["REQUEST_METHOD"]
           variables = nil
           selected_route = nil
@@ -122,7 +122,7 @@ module GentleREST
       end
       
       if http_response != nil
-        if http_response.cache? && ENV['GENTLE_ENV'] != 'development'
+        if http_response.cache? && ENV['ENVIRONMENT'] != 'development'
           # This response should be cached.
           
           http_host = mongrel_request.params["HTTP_HOST"]
@@ -137,7 +137,7 @@ module GentleREST
           uri = Addressable::URI.parse("#{scheme}://#{http_host}#{http_uri}")
           http_response.uri = uri
           
-          GentleREST::HttpCache.cache(http_response)
+          GentleREST::HttpResponseCache.cache(http_response)
         end
         
         # Copies the values over into the Mongrel response object.
@@ -173,11 +173,10 @@ module GentleREST
             profile_dir =
               File.expand_path(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
           else
-            warn(
+            abort(
               "Could not find profile directory.  " +
               "Root directory was not set."
             )
-            exit
           end
 
           output_filename = (Time.now.to_f * 10000).to_i.to_s + ".html"

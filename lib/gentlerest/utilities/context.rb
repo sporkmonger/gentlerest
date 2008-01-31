@@ -112,7 +112,7 @@ module GentleREST
     # within the +Proc+ that was bound to the +Context+ instance.
     def output_buffer
       if !defined?(@output_buffer) || @output_buffer == nil
-        require 'stringio'
+        require "stringio"
         @output_buffer = StringIO.new
       end
       return @output_buffer

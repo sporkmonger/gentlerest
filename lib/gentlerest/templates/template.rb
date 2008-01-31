@@ -21,8 +21,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'rubygems'
-require 'haml'
+require "rubygems"
+require "haml"
 
 # This variable stores a list of all paths to search for when locating a
 # named template.

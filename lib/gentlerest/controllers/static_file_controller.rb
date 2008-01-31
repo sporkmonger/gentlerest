@@ -21,10 +21,10 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'rubygems'
-require 'addressable/uri'
-require 'mime/types'
-require 'gentlerest/controllers/base_controller'
+require "rubygems"
+require "addressable/uri"
+require "mime/types"
+require "gentlerest/controllers/base_controller"
 
 module GentleREST
   class StaticFileController < GentleREST::BaseController

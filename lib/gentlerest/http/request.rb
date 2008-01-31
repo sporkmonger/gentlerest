@@ -29,11 +29,11 @@ module GentleREST
   # created if explicitly requested, in order to avoid overhead.
   class HttpRequest
     # Creates a new HttpRequest object.
-    def initialize(mongrel_request)
-      @mongrel_request = mongrel_request
+    def initialize(env={})
+      @env = env
       @variables = {}
       @headers = {}
-      for key, value in @mongrel_request.params
+      for key, value in env
         if key =~ /^HTTP_/
           header_name = GentleREST::Normalization.http_header_normalize(
             key[5..-1].split(/[\-_]/).join("-"))
@@ -42,22 +42,23 @@ module GentleREST
       end
     end
     
-    # Returns the wrapped Mongrel request object.
-    attr_reader :mongrel_request
+    # Returns the wrapped Rack environment Hash.
+    attr_reader :env
     
     # Returns the normalized request headers.
     attr_reader :headers
 
     # Returns the HTTP method as a Symbol object.
     def method
-      return @method ||=
-        @mongrel_request.params["REQUEST_METHOD"].upcase.to_sym
+      return @method ||= env["REQUEST_METHOD"].upcase.to_sym
     end
 
     # Returns the Addressable::URI object for the request.
     def uri
       if !defined?(@uri) || @uri.blank?
-        @uri = Addressable::URI.parse(@mongrel_request.params["REQUEST_URI"])
+        @uri = Addressable::URI.parse(
+          env["PATH_INFO"] + env["QUERY_STRING"]
+        ).normalize
       end
       return @uri
     end

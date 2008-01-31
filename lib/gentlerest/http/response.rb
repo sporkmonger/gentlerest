@@ -50,7 +50,6 @@ module GentleREST
       @layout = nil
       @body = body
       @history = nil
-      @uri = nil
       @cache = false
       @render_disabled = false
     end
@@ -163,16 +162,6 @@ module GentleREST
     # Sets the redirect history for this response.
     def history=(new_history)
       @history = new_history
-    end
-    
-    # Returns the URI for this resource, if any.
-    def uri
-      return @uri
-    end
-    
-    # Sets the URI for this resource.
-    def uri=(new_uri)
-      @uri = new_uri
     end
     
     # Returns true if this response should be cached.

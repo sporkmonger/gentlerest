@@ -1,11 +1,11 @@
-require 'rubygems'
-require 'rake'
-require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/packagetask'
-require 'rake/gempackagetask'
-require 'rake/contrib/rubyforgepublisher'
-require 'spec/rake/spectask'
+require "rubygems"
+require "rake"
+require "rake/testtask"
+require "rake/rdoctask"
+require "rake/packagetask"
+require "rake/gempackagetask"
+require "rake/contrib/rubyforgepublisher"
+require "spec/rake/spectask"
 
 require File.join(File.dirname(__FILE__), 'lib/gentlerest', 'version')
 
@@ -165,10 +165,10 @@ namespace :spec do
   
   # desc "Start up autotest for RSpec"
   # task :autospec do
-  #   require 'autotest'
-  #   require 'autotest/growl'
-  #   require 'autotest/redgreen'
-  #   require 'vendor/autospec/lib/autospec'
+  #   require "autotest"
+  #   require "autotest/growl"
+  #   require "autotest/redgreen"
+  #   require "vendor/autospec/lib/autospec"
   #   Autospec.run
   # end
 

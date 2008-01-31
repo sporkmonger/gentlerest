@@ -4,7 +4,7 @@ $:.unshift(lib_dir)
 $:.unshift(spec_dir)
 
 require "gentlerest"
-require "gentlerest/client/http_client"
+require "gentlerest/http/client"
 require "gentlerest/extensions/robots"
 require "init_server"
 

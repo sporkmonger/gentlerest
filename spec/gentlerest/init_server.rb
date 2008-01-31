@@ -1,4 +1,4 @@
-require 'gentlerest'
+require "gentlerest"
 
 if GentleREST.server(:default) == nil
   Thread.new do

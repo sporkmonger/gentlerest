@@ -3,8 +3,8 @@ require "addressable/uri"
 require "gentlerest/version"
 require "gentlerest/utilities/blank"
 require "gentlerest/utilities/normalize"
-require "gentlerest/server/http_request"
-require "gentlerest/server/http_response"
+require "gentlerest/http/request"
+require "gentlerest/http/response"
 
 module GentleREST
   class HttpClient
