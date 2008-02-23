@@ -23,38 +23,45 @@
 
 require "rubygems"
 require "gentlerest/controllers/base_controller"
+require "gentlerest/templates/template"
+require "gentlerest/templates/presenter"
 
 $TEMPLATE_PATH << File.expand_path(File.join(
   File.dirname(__FILE__), "/../../../templates"
 ))
 
 module GentleREST
+  # This Presenter class simply provides access within the template
+  # to whatever objects were passed to the DefaultResponseController.
+  class DefaultResponsePresenter < GentleREST::Presenter
+    attr_accessor :objects
+    attr_accessor :response_status
+  end
+
   class DefaultResponseController < GentleREST::BaseController
     def initialize(response_status, *objects)
-      @response_status = response_status
-      @objects = objects
+      @presenter = GentleREST::DefaultResponsePresenter.new
+      @presenter.objects = objects
+      @presenter.response_status = response_status
     end
-
-    attr_reader :response_status
-    attr_reader :objects
 
     action ALL_METHODS do
       # We definitely do not want to cache this response.
       response.cache = false
       
-      response.status = response_status
+      response.status = @presenter.response_status
       response.xhtml
       response.utf8
       begin
-        response.render("errors/#{response_status}")
+        response.render("errors/#{@presenter.response_status}", @presenter)
       rescue GentleREST::TemplateLoadError
         # Couldn't find the template, time to explode
         response.status = 500
         begin
-          response.render("errors/template_missing")
+          response.render("errors/template_missing", @presenter)
         rescue GentleREST::TemplateLoadError
           response.plain_text
-          template_content = "Missing template: #{response_status}"
+          template_content = "Missing template: #{@presenter.response_status}"
         end
       end
     end

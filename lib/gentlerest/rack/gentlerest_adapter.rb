@@ -143,7 +143,7 @@ module Rack
           http_response.headers = {
             "Content-Type" => "text/plain"
           }
-          http_response.body << "Fatal Error."
+          http_response.body = "Fatal Error."
         end
         
         if http_response.cache? && ENV['ENVIRONMENT'] != 'development'

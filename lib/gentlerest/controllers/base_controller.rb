@@ -111,6 +111,44 @@ module GentleREST
       self.hooks << ControllerHook.new(:after, variables, action)
     end
     
+    # Returns the default Presenter object for this controller.
+    def self.presenter
+      if @presenter == nil
+        super_class = self.ancestors[1]
+        if super_class.respond_to?(:presenter)
+          current_presenter = super_class.presenter
+          # It's possible that someone might monkey-patch Kernel to have
+          # a presenter method.  It's also possible that someone might
+          # override the presenter method and then return something bogus.
+          # Either way, we'd like to catch that early on.
+          if current_presenter != nil &&
+              !current_presenter.kind_of?(GentleREST::Presenter)
+            raise TypeError,
+              "Expected object of type GentleREST::Presenter, " +
+              "got #{current_presenter.class.name}.  " +
+              "Check controller superclasses."
+          end
+          return current_presenter
+        end
+        return nil
+      else
+        return @presenter
+      end
+    end
+    
+    # Sets the default Presenter object for this controller and its
+    # subclasses.  Subclasses may set their own default presenters
+    # without affecting Presenter objects further up the inheritance tree.
+    def self.presenter=(new_presenter)
+      if new_presenter != nil &&
+          !new_presenter.kind_of?(GentleREST::Presenter)
+        raise TypeError,
+          "Expected object of type GentleREST::Presenter, " +
+          "got #{new_presenter.class.name}."
+      end
+      @presenter = new_presenter
+    end
+    
     # Locates the appropriate action on the controller for this request,
     # then runs the action within a custom execution context.
     def dispatch_action(http_request, http_response)
@@ -138,7 +176,6 @@ module GentleREST
         break if selected_action != nil
       end
 
-
       if selected_action != nil
         context = GentleREST::Context.new(self, :capture_output => false)
         (class <<context; self; end).send(:define_method, :request) do
@@ -147,7 +184,8 @@ module GentleREST
         (class <<context; self; end).send(:define_method, :response) do
           http_response
         end
-        http_response.render_context = context
+        http_response.options[:request] = http_request
+        http_response.options[:controller] = self
 
         # Find any matching hooks.
         matching_hooks = []

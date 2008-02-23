@@ -22,6 +22,7 @@
 #++
 
 require "gentlerest/templates/template"
+require "gentlerest/templates/presenter"
 require "gentlerest/utilities/context"
 require "gentlerest/utilities/normalize"
 
@@ -51,7 +52,11 @@ module GentleREST
       @body = body
       @history = nil
       @cache = false
-      @render_disabled = false
+      @options = {
+        :render_disabled => false,
+        :request => nil,
+        :controller => nil
+      }
     end
   
     # The status code for the HTTP response.
@@ -227,50 +232,54 @@ module GentleREST
     # 
     # The method <code>inner_content</code> should be called from within
     # the layout template to render the inner template.
-    def layout(template_name, context=self.render_context)
-      @layout = [template_name, context]
+    def layout(template_name, presenter=nil)
+      @layout = [template_name, presenter]
       return true
     end
     
     # Renders a named template.  
-    def render(template_name, context=self.render_context)
+    def render(template_name, presenter=nil)
       if @render_disabled == true
         raise GentleREST::CachingError,
           "Rendering has been disabled because this response was cached."
       end
+      if presenter == nil
+        # No Presenter object was supplied, use the controller's default
+        # Presenter object or an empty Presenter.
+        presenter = GentleREST::Presenter.default_presenter(
+          self.options[:controller])
+      end
       if @layout == nil
-        self.body = GentleREST::Template.render(template_name, context)
+        self.body = GentleREST::Template.render(template_name, presenter)
       else
-        outer_template, outer_context = @layout
+        outer_template, outer_presenter = @layout
+        if outer_presenter == nil
+          # Same as above, no layout Presenter supplied, use defaults.
+          outer_presenter = GentleREST::Presenter.default_presenter(
+            self.options[:controller])
+        end
         self.body = GentleREST::Template.render(
-          outer_template, outer_context, {
+          outer_template, outer_presenter, {
             :inner_template => template_name,
-            :inner_context => context
+            :inner_presenter => presenter
           }
         )
       end
       return self.body
     end
-    
-    # Sets the render context for this response.
-    def render_context=(new_render_context)
-      @render_context = new_render_context
-    end
   
-    def disable_rendering
-      @render_context = nil
-      @layout = nil
-      @render_disabled = true
+    # This method returns a set of options that control how certain
+    # response methods behave in certain situations.
+    def options # :nodoc:
+      return @options
     end
     
-  protected
-    # Returns the context object for rendering this response.
-    def render_context
-      if defined?(@render_context) && @render_context != nil
-        return @render_context
-      else
-        return Object.new
-      end
+    # This method disables rendering.  This method is called to allow
+    # the caching of Response objects.
+    def disable_rendering # :nodoc:
+      @options.clear
+      @options[:render_disabled] = true
+      @layout = nil
     end
   end
 end

@@ -23,6 +23,7 @@
 
 require "rubygems"
 require "haml"
+require "gentlerest/templates/presenter"
 
 # This variable stores a list of all paths to search for when locating a
 # named template.
@@ -75,10 +76,17 @@ module GentleREST
     end
     
     # Renders a template.  Takes a Symbol identifying the type, and
-    # optionally take a context to 
+    # optionally take a Presenter, which is used as the execution context
+    # for the Template.
     #
     # Raises an ArgumentError if the type is invalid.
-    def self.render(name, context=Object.new, options={})
+    def self.render(name, presenter=GentleREST::Presenter.new, options={})
+      if !presenter.kind_of?(GentleREST::Presenter)
+        raise TypeError,
+          "Expected object of type GentleREST::Presenter, " +
+          "got #{presenter.class.name}."
+      end
+
       # Locate the template.
       path = nil
       for load_path in $TEMPLATE_PATH
@@ -113,31 +121,13 @@ module GentleREST
       raw_content = File.open(path, "r") do |file|
         file.read
       end
-      
-      # Add template methods to Context.
-      if !context.kind_of?(GentleREST::Context)
-        context = GentleREST::Context.new(context, :capture_output => false)
-      end
-      (class <<context; self; end).send(:define_method, :inner_content) do
-        GentleREST::Template.render(
-          options[:inner_template], options[:inner_context])
-      end
-      (class <<context; self; end).send(:define_method, :preformat) do |x|
-        "<pre>" + x.gsub("\n", "&#x000A;") + "</pre>"
-      end
-      (class <<context; self; end).send(:define_method, :h) do |text|
-        if !text.kind_of?(String)
-          if text.respond_to?(:to_str)
-            text = text.to_str
-          else
-            text = test.to_s
-          end
-        end
-        text.gsub(/\</, "&lt;")
-      end
+
+      # Assign layout information to the presenter object.
+      presenter.inner_template = options[:inner_template]
+      presenter.inner_presenter = options[:inner_presenter]
       
       begin
-        return self.processor(type).call(raw_content, context)
+        return self.processor(type).call(raw_content, presenter)
       rescue Exception => e
         e.message << "\nError occurred while rendering '#{name}'"
         raise e
