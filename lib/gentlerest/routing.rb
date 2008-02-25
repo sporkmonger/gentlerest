@@ -25,6 +25,7 @@ require "rubygems"
 require "addressable/uri"
 require "gentlerest/errors"
 require "gentlerest/instance"
+require "gentlerest/processors/default_route_processor"
 require "gentlerest/routing/builder"
 require "gentlerest/routing/builders/trailing_slash_builder"
 
@@ -72,14 +73,6 @@ module GentleREST
           "An instantiated builder class must respond to the " +
           ":generate message."
       end
-    end
-  end
-  
-  # This class processes URI templates for Routes.
-  class DefaultRouteProcessor
-    # Returns a pattern for matching variables in Routes.
-    def self.match(name)
-      return "[^/\\n]+"
     end
   end
   
