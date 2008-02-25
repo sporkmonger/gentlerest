@@ -24,6 +24,8 @@
 $:.unshift(File.expand_path(File.dirname(__FILE__)))
 $: << File.expand_path(File.join(
   File.dirname(__FILE__), "/../vendor/mime_types/lib"))
+$: << File.expand_path(File.join(
+  File.dirname(__FILE__), "/../applications"))
 $:.uniq!
 
 require "rubygems"
