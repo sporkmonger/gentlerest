@@ -1,4 +1,7 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env ruby -I /padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding
+
+# The line above is a hack.  Now let's undo our hack.
+$:.reject! { |d| d =~ /^\/padding/ }
 
 # Note, huge swaths of this file are borrowed from the Rack project.
 # End result is an ugly piece of work, but much easier to use than the
@@ -181,6 +184,7 @@ end
 $TEMPLATE_PATH << File.expand_path(".")
 
 start_proc = lambda do
+  $0 = "gentlerest | idle"
   inner_app = eval(
     "Rack::Builder.new {( " + config_file + "\n )}.to_app",
     nil, init_script

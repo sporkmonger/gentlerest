@@ -72,11 +72,15 @@ module Rack
           "#{scheme}://#{host}" +
           env["SCRIPT_NAME"] + env["PATH_INFO"] + env["QUERY_STRING"]
         ).normalize
+        method = env["REQUEST_METHOD"]
+        
+        if $0 =~ /^gentlerest/
+          $0 = "gentlerest | handling #{method} #{http_request.uri.to_s}"
+        end
 
         begin
           http_response = ::GentleREST::HttpResponseCache.retrieve(actual_uri)
           if http_response == nil || ENV['ENVIRONMENT'] == 'development'
-            method = env["REQUEST_METHOD"]
             variables = nil
             selected_route = nil
             cached_route = self.instance.cached_routes[http_request.uri.to_s]
@@ -155,6 +159,10 @@ module Rack
           "Server" => "GentleREST/#{::GentleREST::Version::STRING}"
         }.merge(http_response.headers)
         http_response.body ||= ""
+
+        if $0 =~ /^gentlerest/
+          $0 = "gentlerest | finished #{method} #{http_request.uri.to_s}"
+        end
 
         if $PROFILE == true
           result = RubyProf.stop
