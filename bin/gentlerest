@@ -1,7 +1,21 @@
-#!/usr/bin/env ruby -I /padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding/padding
+#!/usr/bin/env ruby
 
-# The line above is a hack.  Now let's undo our hack.
-$:.reject! { |d| d =~ /^\/padding/ }
+if RUBY_PLATFORM !~ /mswin/
+  # This is a giant, giant hack to make changing process titles with
+  # the $0 variable work as expected.
+  # If anyone can come up with a method of doing this that doesn't make
+  # baby Jesus cry, please let me know.
+  padded = false
+  $:.each { |d| padded = true if d =~ /^\/padding/ }
+  $:.reject! { |d| d =~ /^\/padding/ }
+  unless padded
+    # The proc title is currently unpadded.  Pad it.
+    ruby = `which ruby`.strip
+    padding = "/padding" * 20 # This number is arbitrary.
+    command = "#{ruby} -I #{padding} #{__FILE__} #{ARGV.join(" ")}"
+    exec(command)
+  end
+end
 
 # Note, huge swaths of this file are borrowed from the Rack project.
 # End result is an ugly piece of work, but much easier to use than the
