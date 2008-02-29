@@ -5,14 +5,12 @@ if RUBY_PLATFORM !~ /mswin/
   # the $0 variable work as expected.
   # If anyone can come up with a method of doing this that doesn't make
   # baby Jesus cry, please let me know.
-  padded = false
-  $:.each { |d| padded = true if d =~ /^\/padding/ }
-  $:.reject! { |d| d =~ /^\/padding/ }
-  unless padded
+  $x ||= false
+  unless $x then
     # The proc title is currently unpadded.  Pad it.
-    ruby = `which ruby`.strip
+    ruby = `which ruby`.chomp
     padding = "/padding" * 20 # This number is arbitrary.
-    command = "#{ruby} -I #{padding} #{__FILE__} #{ARGV.join(" ")}"
+    command = "#{ruby} -s #{__FILE__} -x=#{padding} #{ARGV.join(" ")}"
     exec(command)
   end
 end
