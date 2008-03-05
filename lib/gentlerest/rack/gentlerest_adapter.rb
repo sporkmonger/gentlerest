@@ -80,6 +80,15 @@ module Rack
 
         begin
           http_response = ::GentleREST::HttpResponseCache.retrieve(actual_uri)
+          if http_response != nil && ENV['ENVIRONMENT'] != 'development'
+            if http_request.headers["If-None-Match"] ==
+                http_response.headers["ETag"]
+              # Our cached resource matches the content in the browser's
+              # cache, no need to resend it.
+              http_response = ::GentleREST::HttpResponse.new
+              http_response.status = 304
+            end
+          end
           if http_response == nil || ENV['ENVIRONMENT'] == 'development'
             variables = nil
             selected_route = nil
@@ -149,8 +158,27 @@ module Rack
           }
           http_response.body = "Fatal Error."
         end
+
+        if http_response.cache? &&
+            !http_response.headers.has_key?("Cache-Control")
+          if ENV['ENVIRONMENT'] != 'development'
+            if http_response.headers["Content-Type"] =~ /image/ ||
+                http_response.headers["Content-Type"] =~ /text\/css/ ||
+                http_response.headers["Content-Type"] =~ /\/javascript/
+              # Longer lasting resources live for an hour.
+              http_response.headers["Cache-Control"] = "max-age=3600"
+            else
+              # Everything else defaults to 15 minutes.
+              http_response.headers["Cache-Control"] = "max-age=900"
+            end
+          end
+        end
         
         if http_response.cache? && ENV['ENVIRONMENT'] != 'development'
+          if !http_response.headers.has_key?("ETag")
+            http_response.headers["ETag"] =
+              Digest::SHA1.hexdigest(http_response.body.hash.to_s)
+          end
           # This response should be cached.
           ::GentleREST::HttpResponseCache.cache(actual_uri, http_response)
         end
