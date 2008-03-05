@@ -120,7 +120,7 @@ module Rack
                 http_request, ::GentleREST::HttpResponse.new)
             else
               # No route found.
-              raise NoRouteError,
+              raise ::GentleREST::NoRouteError,
                 "Unable to service request, no route found matching " +
                 "'#{http_request.uri.to_s}'."
             end
