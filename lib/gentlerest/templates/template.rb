@@ -108,11 +108,14 @@ module GentleREST
       if path == nil
         raise GentleREST::ResourceNotFoundError,
           "Template not found: #{name.inspect}"
+      elsif File.directory?(path)
+        raise GentleREST::ResourceNotFoundError,
+          "Template not found: #{name.inspect}"
       end
       
       # Normalize to symbol
-      type = File.extname(path).gsub(/^\./, "").to_s.to_sym
-      if !self.types.include?(type)
+      type = File.extname(path).gsub(/^\./, "").to_s
+      if type != "" && !self.types.include?(type.to_sym)
         raise ArgumentError,
           "Unrecognized template type: #{type.inspect}\n" +
           "Valid types: " +
