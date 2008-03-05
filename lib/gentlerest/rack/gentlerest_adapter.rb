@@ -183,8 +183,11 @@ module Rack
           ::GentleREST::HttpResponseCache.cache(actual_uri, http_response)
         end
 
+        # Default header values.
         http_response.headers = {
-          "Server" => "GentleREST/#{::GentleREST::Version::STRING}"
+          "Server" => "GentleREST/#{::GentleREST::Version::STRING}",
+          # Default to plain text to force setting this header correctly.
+          "Content-Type" => "text/plain"
         }.merge(http_response.headers)
         http_response.body ||= ""
 
