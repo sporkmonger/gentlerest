@@ -152,22 +152,39 @@ end
 
 local_vendor_path = GentleREST::Locator.locate(:vendor)
 
-init_script = GentleREST::Locator.locate(:init_script)
-if init_script == nil
-  STDERR.puts("Could not locate init script.")
-  exit
-end
+init_script = nil
+if !([nil, "usage", "help"].include?(command))
+  init_script = GentleREST::Locator.locate(:init_script)
+  if init_script == nil
+    config_path = GentleREST::Locator.locate(:config)
+    init_scripts = Dir.glob(File.expand_path(
+      File.join(config_path, "/*.init.rb")
+    ))
+    if init_scripts != nil && init_scripts.size > 1
+      STDERR.puts("Could not select init script.")
+      STDERR.puts("Use: gentlerest <command> -n <script>")
+      STDERR.puts
+      init_scripts.each do |init_script|
+        STDERR.puts(File.basename(init_script).gsub(/\.init\.rb$/, ""))
+      end
+      exit
+    else
+      STDERR.puts("Could not locate init script.")
+      exit
+    end
+  end
 
-config_file = File.read(init_script)
+  config_file = File.read(init_script)
 
-# If the config file contained a #\ line, add those parameters to the
-# arguments array.
-if config_file[/^#\\(.*)/]
-  begin
-    opts.parse!($1.split(/\s+/))
-  rescue OptionParser::InvalidOption => e
-    STDERR.puts("While parsing options in 'config.ru':")
-    abort(e.message)
+  # If the config file contained a #\ line, add those parameters to the
+  # arguments array.
+  if config_file[/^#\\(.*)/]
+    begin
+      opts.parse!($1.split(/\s+/))
+    rescue OptionParser::InvalidOption => e
+      STDERR.puts("While parsing options in 'config.ru':")
+      abort(e.message)
+    end
   end
 end
 

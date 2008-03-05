@@ -128,17 +128,18 @@ module GentleREST
     # Finds the init script for the current GentleREST application.
     def self.locate_init_script
       root = self.locate(:root)
+      config = self.locate(:config)
       init_script = nil
       
       # Hunt down the init script.  It can either be in the GENTLE_ROOT
       # directory or in GENTLE_ROOT/config.
       if ENV['INIT_SCRIPT'] == nil
         init_script = File.expand_path(
-          File.join(root, "/config/init.rb")
+          File.join(config, "/init.rb")
         )
         if !File.exist?(init_script)
           init_scripts = Dir.glob(File.expand_path(
-            File.join(root, "/config/*.init.rb")
+            File.join(config, "/*.init.rb")
           ))
           if init_scripts.size == 1
             init_script = init_scripts.first
@@ -158,11 +159,11 @@ module GentleREST
           init_script = File.expand_path(named_init_script)
         else
           init_script = File.expand_path(
-            File.join(root, "/config/", named_init_script)
+            File.join(config, named_init_script)
           )
           if !File.exist?(init_script)
             init_script = File.expand_path(
-              File.join(root, "/config/", named_init_script.to_s + ".init.rb")
+              File.join(config, named_init_script.to_s + ".init.rb")
             )
           end
         end
