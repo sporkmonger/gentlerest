@@ -16,11 +16,14 @@ if RUBY_PLATFORM !~ /mswin/
 end
 
 # Note, huge swaths of this file are borrowed from the Rack project.
-# End result is an ugly piece of work, but much easier to use than the
-# rackup command, while still being effectively interoperable.  IMHO, YMMV.
+# End result is an ugly piece of work, but much easier to use and more
+# powerful than the rackup command, while still being effectively
+# interoperable.  IMHO, YMMV.
 
 $PROFILE = false
 
+# Can't use the locator class here, because we haven't actually loaded
+# GentleREST yet.
 lib_path = File.expand_path(File.join(File.dirname(__FILE__), "/../lib"))
 local_vendor_path = File.expand_path("./vendor")
 if File.exists?(File.join(local_vendor_path, "/gentlerest/lib"))
@@ -76,6 +79,10 @@ opts = OptionParser.new("", 24, '  ') { |opts|
     lineno += 1
   }
 
+  opts.on("-n", "--name NAME", "select init script NAME") { |name|
+    ENV['INIT_SCRIPT'] = name
+  }
+
   opts.on("-d", "--debug", "set debugging flags (set $DEBUG to true)") {
     $DEBUG = true
   }
@@ -126,51 +133,58 @@ opts = OptionParser.new("", 24, '  ') { |opts|
   opts.separator "help"
 }
 
+# We haven't parsed options yet, but we absolutely have to
+# have access to the script name here.
+if ARGV.include?("-n") || ARGV.include?("--name")
+  index = ARGV.index("-n")
+  index = ARGV.index("--name") if index == nil
+  index += 1 if index != nil
+  ENV['INIT_SCRIPT'] = ARGV[index]
+end
+
+ENV['GENTLE_ROOT'] = GentleREST::Locator.locate(:root)
 if ENV['GENTLE_ROOT'] == nil
-  # Find root directory
-  current_directory = File.expand_path(".")
-  loop do
-    if File.exists?(File.join(current_directory, "config")) && 
-        (File.exists?(File.join(current_directory, "rakefile")) ||
-        File.exists?(File.join(current_directory, "Rakefile")))
-      ENV['GENTLE_ROOT'] = current_directory
-      break
-    elsif current_directory ==
-        File.expand_path(File.join(current_directory, ".."))
-      # Top level, couldn't find GENTLE_ROOT
-      if !([nil, "usage", "help"].include?(command))
-        puts "Could not find GENTLE_ROOT.  Aborting."
-        exit
-      end
-      break
-    else
-      current_directory = File.expand_path(File.join(current_directory, ".."))
-    end
+  if !([nil, "usage", "help"].include?(command))
+    STDERR.puts("Could not find GENTLE_ROOT.  Aborting.")
+    exit
   end
 end
 
-# Hunt down the config script.  It can either be in the GENTLE_ROOT
-# directory or in GENTLE_ROOT/config.
-init_script = File.expand_path(
-  File.join(ENV['GENTLE_ROOT'], "config.ru"))
-if !File.exist?(init_script)
-  init_script = File.expand_path(
-    File.join(ENV['GENTLE_ROOT'], "config/config.ru"))
-end
-if !File.exist?(init_script)
-  abort("Configuration 'config.ru' not found.")
-end
+local_vendor_path = GentleREST::Locator.locate(:vendor)
 
-config_file = File.read(init_script)
+init_script = nil
+if !([nil, "usage", "help"].include?(command))
+  init_script = GentleREST::Locator.locate(:init_script)
+  if init_script == nil
+    config_path = GentleREST::Locator.locate(:config)
+    init_scripts = Dir.glob(File.expand_path(
+      File.join(config_path, "/*.init.rb")
+    ))
+    if init_scripts != nil && init_scripts.size > 1
+      STDERR.puts("Could not select init script.")
+      STDERR.puts("Use: gentlerest <command> -n <script>")
+      STDERR.puts
+      init_scripts.each do |init_script|
+        STDERR.puts(File.basename(init_script).gsub(/\.init\.rb$/, ""))
+      end
+      exit
+    else
+      STDERR.puts("Could not locate init script.")
+      exit
+    end
+  end
 
-# If the config file contained a #\ line, add those parameters to the
-# arguments array.
-if config_file[/^#\\(.*)/]
-  begin
-    opts.parse!($1.split(/\s+/))
-  rescue OptionParser::InvalidOption => e
-    STDERR.puts("While parsing options in 'config.ru':")
-    abort(e.message)
+  config_file = File.read(init_script)
+
+  # If the config file contained a #\ line, add those parameters to the
+  # arguments array.
+  if config_file[/^#\\(.*)/]
+    begin
+      opts.parse!($1.split(/\s+/))
+    rescue OptionParser::InvalidOption => e
+      STDERR.puts("While parsing options in 'config.ru':")
+      abort(e.message)
+    end
   end
 end
 
@@ -190,9 +204,9 @@ end
 
 # By default, the GENTLE_ROOT/templates directory is where you put your
 # templates.  If it exists, we want to add it to the $TEMPLATE_PATH.
-if File.exist?(File.join(ENV['GENTLE_ROOT'], "templates"))
-  $TEMPLATE_PATH.unshift(File.join(ENV['GENTLE_ROOT'], "templates"))
-end
+# Other paths may be added manually.
+template_path = GentleREST::Locator.locate(:templates)
+$TEMPLATE_PATH.unshift(template_path) if template_path != nil
 $TEMPLATE_PATH << File.expand_path(".")
 
 start_proc = lambda do
