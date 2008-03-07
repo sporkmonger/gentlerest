@@ -24,7 +24,7 @@
 require "rubygems"
 require "digest/sha1"
 require "gentlerest/errors"
-require "gentlerest/hashes/text_hash"
+require "gentlerest/hashes/string_hash"
 
 module GentleREST
   # This class represents a single user's session state.
@@ -67,7 +67,7 @@ module GentleREST
         elsif value.respond_to?(:to_hash)
           value = value.to_hash
         end
-        normalized_value = GentleREST::TextHash.new
+        normalized_value = GentleREST::StringHash.new
         normalized_value.update(value)
         normalized_session_data[key] = normalized_value
       end
@@ -96,7 +96,7 @@ module GentleREST
     # Returns a Hash object that represents the current session state.
     def state
       if !defined?(@state) || @state == nil
-        @state = GentleREST::TextHash.new
+        @state = GentleREST::StringHash.new
       end
       return @state
     end

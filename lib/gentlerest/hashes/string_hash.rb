@@ -25,7 +25,7 @@ module GentleREST
   # This class shares all of the same methods as the Hash class, and
   # exists largely to prevent surprise when a JSON serialization
   # converts Symbol objects to String objects.
-  class TextHash < Hash
+  class StringHash < Hash
     include Enumerable
 
     alias_method :internal_store, :store
@@ -33,7 +33,7 @@ module GentleREST
     alias_method :internal_delete, :delete
     protected :internal_delete
 
-    # Creates a new TextHash object.
+    # Creates a new StringHash object.
     def initialize
       super(nil)
     end
