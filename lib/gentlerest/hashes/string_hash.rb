@@ -40,8 +40,8 @@ module GentleREST
     
     # See Hash#[]=
     #
-    # This method will raise an ArgumentError if either the key or the value
-    # is a non-string object.
+    # This method will raise an ArgumentError if the key is not a
+    # String object.
     def []=(key, value)
       if !key.kind_of?(String)
         raise TypeError, "The key must be a String object."
@@ -52,8 +52,8 @@ module GentleREST
 
     # See Hash#update
     #
-    # This method will raise an ArgumentError if any key or value
-    # is a non-string object.
+    # This method will raise an ArgumentError if any key is not a
+    # String object.
     def update(hash)
       if !hash.kind_of?(Hash)
         raise TypeError, "can't convert #{hash.class.name} into Hash"
