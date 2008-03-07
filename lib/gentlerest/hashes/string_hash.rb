@@ -71,22 +71,5 @@ module GentleREST
       end
       return self
     end
-    
-    # Converts the hash object into a tab-delimitted hash String.
-    def to_s
-      result = ""
-      sorted_array = self.sort
-      longest_key = nil
-      for pair in sorted_array
-        if longest_key.nil? || pair[0].size > longest_key.size
-          longest_key = pair[0]
-        end
-      end
-      key_field_size = longest_key.size + 4
-      for pair in sorted_array
-        result << pair[0].ljust(key_field_size) + pair[1] + "\n"
-      end
-      return result
-    end
   end
 end
