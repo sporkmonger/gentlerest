@@ -24,28 +24,54 @@
 require "rubygems"
 require "digest/sha1"
 require "gentlerest/errors"
+require "gentlerest/hashes/text_hash"
 
 module GentleREST
   # This class represents a single user's session state.
   class Session
     # Returns the current session store.
     def self.store
+      if !defined?(@store) || @store == nil
+        raise StandardError, "The session store has not been set yet."
+      end
       return @store
     end
 
     # Sets the session store to a new object.
     #
-    # Any object which responds to the [] and []= messages may be used
-    # as a session store.  The session store object should behave like
-    # a Hash object.
+    # Any object which responds to the [], []=, and update messages may
+    # be used as a session store.  The session store object should behave
+    # like a Hash object.
     def self.store=(new_store)
       # TODO: Figure out which messages we're actually going to send
       # to this object and check for their presence.
-      unless new_store.respond_to?(:[]) && new_store.respond_to?(:[]=)
+      unless new_store.respond_to?(:[]) &&
+          new_store.respond_to?(:[]=) &&
+          new_store.respond_to?(:update)
         raise TypeError,
           "The session store must respond to the [] and []= messages."
       end
       @store = new_store
+    end
+    
+    # Loads session data in the form of a Hash object into the current
+    # session store.  Typically, this data will be deserialized from JSON.
+    def self.load(session_data)
+      normalized_session_data = {}
+      session_data.each do |key, value|
+        unless key.kind_of?(String) && key =~ /\d+/
+          raise ArgumentError, "Invalid session id: #{key.inspect}"
+        end
+        if !value.kind_of?(Hash) && !value.respond_to?(:to_hash)
+          raise ArgumentError, "Invalid session state: #{value.inspect}"
+        elsif value.respond_to?(:to_hash)
+          value = value.to_hash
+        end
+        normalized_value = GentleREST::TextHash.new
+        normalized_value.update(value)
+        normalized_session_data[key] = normalized_value
+      end
+      return self.store.update(normalized_session_data)
     end
     
     # Creates a new Session object.  If the optional session id is given,
@@ -70,7 +96,7 @@ module GentleREST
     # Returns a Hash object that represents the current session state.
     def state
       if !defined?(@state) || @state == nil
-        @state = {}
+        @state = GentleREST::TextHash.new
       end
       return @state
     end
