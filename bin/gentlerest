@@ -26,7 +26,7 @@ $PROFILE = false
 # GentleREST yet.
 lib_path = File.expand_path(File.join(File.dirname(__FILE__), "/../lib"))
 local_vendor_path = File.expand_path("./vendor")
-if File.exists?(File.join(local_vendor_path, "/gentlerest/lib"))
+if File.exist?(File.join(local_vendor_path, "/gentlerest/lib"))
   $:.unshift(File.expand_path(
     File.join(local_vendor_path, "/gentlerest/lib")))
 end

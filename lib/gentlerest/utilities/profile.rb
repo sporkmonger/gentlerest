@@ -30,10 +30,10 @@ module GentleREST
         printer = RubyProf::GraphHtmlPrinter.new(result)
 
         if ENV['GENTLE_ROOT'] != nil
-          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp"))
+          if !File.exist?(File.join(ENV['GENTLE_ROOT'], "/tmp"))
             Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp"))
           end
-          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
+          if !File.exist?(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
             Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp/profile"))
           end
           profile_dir =
