@@ -21,8 +21,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
+require "gentlerest/directory_lookup"
 require "gentlerest/http/response"
-require "digest/sha1"
 
 module GentleREST
   class HttpResponseCache
@@ -30,16 +30,12 @@ module GentleREST
     def self.startup
       if !defined?(@cache_dir) || @cache_dir == nil
         if ENV['GENTLE_ROOT'] != nil
-          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp"))
-            Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp"))
-          end
-          if !File.exists?(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
-            Dir.mkdir(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
-          end
           @cache_dir =
             File.expand_path(File.join(ENV['GENTLE_ROOT'], "/tmp/cache"))
+          @lookup = GentleREST::DirectoryLookup.new(@cache_dir)
         else
           @cache_dir = nil
+          @lookup = nil
         end
       end
     end
@@ -49,21 +45,9 @@ module GentleREST
       # WARNING: For performance reasons, startup is not called from here.
       # However, if startup is not called before this method is executed,
       # the cache will be disabled.
-      return nil if !defined?(@cache_dir) || @cache_dir == nil
-      
-      lookup = Digest::SHA1.hexdigest(uri.to_s).to_s[0...36]
-      cache_path = File.join(
-        @cache_dir, lookup.scan(/.{12}/).join("/") + ".http")
-      
-      # Create intermediate directories
-      intermediate_path = File.dirname(File.dirname(cache_path))
-      if !File.exists?(intermediate_path)
-        Dir.mkdir(intermediate_path)
-      end
-      intermediate_path = File.dirname(cache_path)
-      if !File.exists?(intermediate_path)
-        Dir.mkdir(intermediate_path)
-      end
+      return nil if !defined?(@lookup) || @lookup == nil
+
+      cache_path = File.join(@lookup.lookup(uri), "response.http")
       
       # Ditch context objects before dumping.
       response.disable_rendering()
@@ -79,15 +63,16 @@ module GentleREST
       # WARNING: For performance reasons, startup is not called from here.
       # However, if startup is not called before this method is executed,
       # the cache will be disabled.
-      return nil if @cache_dir == nil
+      return nil if !defined?(@lookup) || @lookup == nil
       
-      lookup = Digest::SHA1.hexdigest(uri.to_s).to_s[0...36]
-      cache_path = File.join(
-        @cache_dir, lookup.scan(/.{12}/).join("/") + ".http")
-      return nil if !File.exists?(cache_path)
+      cache_path = File.join(@lookup.lookup(uri), "response.http")
+
+      return nil if !File.exist?(cache_path)
+
       data = File.open(cache_path, "r") do |file|
         file.read
       end
+
       begin
         response = Marshal.load(data)
       rescue ArgumentError
