@@ -54,26 +54,6 @@ module GentleREST
       @store = new_store
     end
     
-    # Loads session data in the form of a Hash object into the current
-    # session store.  Typically, this data will be deserialized from JSON.
-    def self.load(session_data)
-      normalized_session_data = {}
-      session_data.each do |key, value|
-        unless key.kind_of?(String) && key =~ /\d+/
-          raise ArgumentError, "Invalid session id: #{key.inspect}"
-        end
-        if !value.kind_of?(Hash) && !value.respond_to?(:to_hash)
-          raise ArgumentError, "Invalid session state: #{value.inspect}"
-        elsif value.respond_to?(:to_hash)
-          value = value.to_hash
-        end
-        normalized_value = GentleREST::StringHash.new
-        normalized_value.update(value)
-        normalized_session_data[key] = normalized_value
-      end
-      return self.store.update(normalized_session_data)
-    end
-    
     # Creates a new Session object.  If the optional session id is given,
     # the session will be loaded from the session store.
     def initialize(session_id=nil)
