@@ -51,6 +51,7 @@ module Rack
       def deferred?(env)
         http_request = ::GentleREST::HttpRequest.new(env)
         selected_route = self.instance.select_route(http_request.uri)
+        return false if selected_route == nil
         return selected_route.deferred?
       end
 
