@@ -47,6 +47,28 @@ module GentleREST
       return @cached_routes
     end
     
+    # Selects the first route that matches the given HTTP request.
+    def select_route(uri)
+      variables = nil
+      selected_route = nil
+      cached_route = self.cached_routes[uri.to_s]
+      if cached_route == nil
+        for route in self.routes
+          variables = uri.extract_mapping(
+            route.pattern, route.processor)
+          if variables != nil
+            selected_route = route
+            self.cached_routes[uri.to_s] =
+              selected_route
+            break
+          end
+        end
+      else
+        selected_route = cached_route
+      end
+      return selected_route
+    end
+    
     # Creates one or more new routes with the given RouteBuilder.
     def route(pattern, controller, options={})
       options[:builder] ||= GentleREST::RouteBuilder
@@ -116,6 +138,14 @@ module GentleREST
     # Sets the URI Template processor object.
     def processor=(new_processor)
       @options[:processor] = new_processor
+    end
+    
+    def deferred?
+      return (!!@options[:deferred])
+    end
+
+    def deferred=(new_deferred)
+      @options[:deferred] = (!!new_deferred)
     end
 
     # Returns the variables that were specified for this route.

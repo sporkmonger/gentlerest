@@ -31,6 +31,7 @@ require "gentlerest/http/response"
 require "gentlerest/cache/response_cache"
 require "gentlerest/controllers/default_response_controller"
 require "gentlerest/controllers/redirect_controller"
+require "gentlerest/rack/deferred"
 
 module Rack
   module Adapter
@@ -42,11 +43,17 @@ module Rack
         # Initialize the http cache.
         ::GentleREST::HttpResponseCache.startup()
       end
-      
+
       def instance
         return @instance
       end
-      
+
+      def deferred?(env)
+        http_request = ::GentleREST::HttpRequest.new(env)
+        selected_route = self.instance.select_route(http_request.uri)
+        return selected_route.deferred?
+      end
+
       def call(env)
         if $PROFILE == true
           require "ruby-prof"
@@ -90,26 +97,10 @@ module Rack
             end
           end
           if http_response == nil || ENV['ENVIRONMENT'] == 'development'
-            variables = nil
-            selected_route = nil
-            cached_route = self.instance.cached_routes[http_request.uri.to_s]
-            if cached_route == nil
-              for route in self.instance.routes
-                variables = http_request.uri.extract_mapping(
-                  route.pattern, route.processor)
-                if variables != nil
-                  selected_route = route
-                  self.instance.cached_routes[http_request.uri.to_s] =
-                    selected_route
-                  break
-                end
-              end
-            else
-              selected_route = cached_route
+            selected_route = self.instance.select_route(http_request.uri)
+            if selected_route != nil
               variables = http_request.uri.extract_mapping(
                 selected_route.pattern, selected_route.processor)
-            end
-            if selected_route != nil
               if selected_route.variables != nil
                 # Merge variables given in route with those extracted
                 # from the URI.
