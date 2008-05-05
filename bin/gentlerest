@@ -111,7 +111,7 @@ opts = OptionParser.new("", 24, '  ') { |opts|
     options[:Host] = host
   }
 
-  opts.on("-p", "--port PORT", "use PORT (default: 9292)") { |port|
+  opts.on("-p", "--port PORT", "use PORT (default: 3000)") { |port|
     options[:Port] = port
   }
 
