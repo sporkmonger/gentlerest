@@ -24,25 +24,25 @@ class RobotDetectionController < GentleREST::BaseController
   end
 end
 
-describe GentleREST::Server, "when routing to '/robot/'" do
+describe GentleREST::Instance, "when routing to '/robot/'" do
   before do
-    @server = GentleREST.server(:default)
-    @server.routes.clear
-    @server.routes << GentleREST::Route.new(
-      "/robot/", RobotDetectionController.new)
-    @uri_prefix = "http://#{@server.address}:#{@server.port}"
+    @instance = GentleREST.spec_instance
+    @instance.routes.clear
+    @instance.routes << GentleREST::Route.new(
+      "/robot/", RobotDetectionController.new
+    )
   end
 
   it "if a normal User-Agent is used it should not be detected" do
     response = GentleREST::HttpClient.request(
-      :GET, @uri_prefix + "/robot/"
+      :GET, GentleREST::AUTHORITY + "/robot/"
     )
     response.body.should == "You are not a robot."
   end
 
   it "if the Google User-Agent is used it should be detected" do
     response = GentleREST::HttpClient.request(
-      :GET, @uri_prefix + "/robot/", {
+      :GET, GentleREST::AUTHORITY + "/robot/", {
         :request_headers => {
           "User-Agent" => GOOGLEBOT_USER_AGENT
         }
@@ -53,7 +53,7 @@ describe GentleREST::Server, "when routing to '/robot/'" do
 
   it "if the GIGRIB User-Agent is used it should be detected" do
     response = GentleREST::HttpClient.request(
-      :GET, @uri_prefix + "/robot/", {
+      :GET, GentleREST::AUTHORITY + "/robot/", {
         :request_headers => {
           "User-Agent" => GIGRIB_USER_AGENT
         }
@@ -63,6 +63,7 @@ describe GentleREST::Server, "when routing to '/robot/'" do
   end
 
   after do
-    @server.routes.clear
+    @instance.routes.clear
+    @instance.cached_routes.clear
   end
 end

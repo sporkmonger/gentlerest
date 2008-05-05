@@ -4,7 +4,7 @@ $:.unshift(lib_dir)
 $:.unshift(spec_dir)
 
 require "gentlerest"
-require "gentlerest/client/http_client"
+require "gentlerest/http/client"
 require "init_server"
 
 class RouteCachingController < GentleREST::BaseController
@@ -14,30 +14,31 @@ class RouteCachingController < GentleREST::BaseController
   end
 end
 
-describe GentleREST::Server, "when routing to '/{controller}/'" do
+describe GentleREST::Instance, "when routing to '/{controller}/'" do
   before do
-    @server = GentleREST.server(:default)
-    @server.routes.clear
-    @server.routes << GentleREST::Route.new(
-      "/{controller}/", RouteCachingController.new)
-    @uri_prefix = "http://#{@server.address}:#{@server.port}"
+    @instance = GentleREST.spec_instance
+    @instance.routes.clear
+    @instance.routes << GentleREST::Route.new(
+      "/{controller}/", RouteCachingController.new
+    )
   end
   
   it "should cache the result of routing a request" do
     response = GentleREST::HttpClient.request(
-      :GET, @uri_prefix + "/controller/")
+      :GET, GentleREST::AUTHORITY + "/controller/")
     response.body.should == "Hello world."
     
-    @server.cached_routes["/controller/"].should_not == nil
-    @server.cached_routes["/controller/"].pattern.should == "/{controller}/"
+    @instance.cached_routes["/controller/"].should_not == nil
+    @instance.cached_routes["/controller/"].pattern.should == "/{controller}/"
 
     # A second request should function exactly as the first one did
     response = GentleREST::HttpClient.request(
-      :GET, @uri_prefix + "/controller/")
+      :GET, GentleREST::AUTHORITY + "/controller/")
     response.body.should == "Hello world."
   end
   
   after do
-    @server.routes.clear
+    @instance.routes.clear
+    @instance.cached_routes.clear
   end
 end
