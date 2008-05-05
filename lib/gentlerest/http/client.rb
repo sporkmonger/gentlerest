@@ -94,7 +94,6 @@ module GentleREST
           end
           http_response.body = response.body
           http_response.history = options[:response_history]
-          http_response.uri = uri
         end
         
 
