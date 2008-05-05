@@ -95,7 +95,6 @@ module GentleREST
           http_response.body = response.body
           http_response.history = options[:response_history]
         end
-        
 
         case response
         when Net::HTTPSuccess

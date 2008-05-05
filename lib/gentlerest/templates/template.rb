@@ -90,7 +90,12 @@ module GentleREST
       # Locate the template.
       path = nil
       for load_path in $TEMPLATE_PATH
-        full_name = File.join(load_path, name)
+        full_name = File.expand_path(File.join(load_path, name))
+        
+        # Check to make sure the requested template is within the load path
+        # to avoid inadvertent rendering of say, /etc/passwd
+        next if full_name.index(File.expand_path(load_path)) != 0
+        
         templates = Dir.glob(full_name + "*")
         if templates.include?(full_name)
           # Use an exact match if we can.
