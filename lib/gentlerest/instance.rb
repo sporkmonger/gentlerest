@@ -44,17 +44,19 @@ module GentleREST
     instance = GentleREST::Instance.new
     block.call(instance) if block != nil
     self.instances << instance
-
     return instance
   end
   
-  # Stops an HTTP server.
-  def self.stop(name=:default)
-    if self.servers[name] != nil
-      self.servers[name].stop
-    else
-      raise StandardError, "Could not stop the '#{name}' GentleREST server."
+  # Starts a given instance.
+  def self.start(instance, server=nil, options={})
+    options = {
+      :Port => 3000, :Host => "0.0.0.0", :AccessLog => []
+    }.merge(options)
+    if server == nil
+      require "rack/handler/mongrel"
+      server = Rack::Handler::Mongrel
     end
+    return server.run(instance.adapter, options)
   end
 
   # This class represents a single GentleREST instance.
