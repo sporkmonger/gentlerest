@@ -22,7 +22,6 @@
 #++
 
 require "rubygems"
-require "haml"
 require "gentlerest/templates/presenter"
 
 # This variable stores a list of all paths to search for when locating a
@@ -144,6 +143,7 @@ module GentleREST
   end
 end
 
+require "haml"
 GentleREST::Template.register_type(:haml) do |input, context|
   Haml::Engine.new(
     input, {
@@ -152,6 +152,7 @@ GentleREST::Template.register_type(:haml) do |input, context|
   ).render(context)
 end
 
+require "sass"
 GentleREST::Template.register_type(:sass) do |input, context|
   Sass::Engine.new(
     input, {
