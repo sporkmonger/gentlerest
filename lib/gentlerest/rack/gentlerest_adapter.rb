@@ -119,10 +119,11 @@ module Rack
           end
         rescue Exception => error
           begin
-            case error
-            when ::GentleREST::NoRouteError,
-                ::GentleREST::NoMatchingActionError,
-                ::GentleREST::ResourceNotFoundError
+            case error.class.name
+            when "GentleREST::NoRouteError",
+                "GentleREST::NoMatchingActionError",
+                "GentleREST::ResourceNotFoundError",
+                "Instrument::ResourceNotFoundError"
               status = 404
             else
               status = 500
