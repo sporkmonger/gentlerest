@@ -69,15 +69,40 @@ module GentleREST
       return selected_route
     end
     
+    # Returns the list of all defined route macros.
+    def self.macros
+      if !defined?(@macros) || @macros.blank?
+        @macros = {}
+      end
+      return @macros
+    end
+
+    # Defines a macro for automating a set of route building parameters.
+    # The method takes a suffix as a parameter.  After the macro has been
+    # defined, the macro may be used by calling the appropriate
+    # GentleREST::Instance#route_* method.
+    def self.route_macro(suffix, pattern, options={})
+      if !suffix.kind_of?(String) && !suffix.kind_of?(Symbol)
+        raise TypeError,
+          "Expected String or Symbol, got #{suffix.class.name}."
+      end
+      method = "route_#{suffix}".to_sym
+      self.macros[method] = {
+        :pattern => pattern,
+        :options => options
+      }
+      method
+    end
+    
     # Creates one or more new routes with the given RouteBuilder.
-    def route(pattern, controller, options={})
+    def route(pattern, options={})
       options[:builder] ||= GentleREST::RouteBuilder
       builder_class = options[:builder]
       begin
-        builder = builder_class.new(pattern, controller, options)
+        builder = builder_class.new(pattern, options)
       rescue ArgumentError
         raise ArgumentError,
-          "A RouteBuilder class must take a pattern, a controller, and an " +
+          "A RouteBuilder class must take a pattern and an " +
           "options Hash as parameters in its initialize method." 
       end
       if builder.respond_to?(:generate)
@@ -87,13 +112,39 @@ module GentleREST
             raise TypeError,
               "Expected GentleREST::Route, got #{route.class.name}."
           end
+          self.routes << route
         end
-        self.routes.concat(new_routes)
-        return new_routes
+        new_routes
       else
         raise TypeError,
           "An instantiated builder class must respond to the " +
           ":generate message."
+      end
+    end
+    
+    # Handles route macros which are defined at runtime.
+    def method_missing(method, *params, &block)
+      route_macro = self.class.macros[method]
+      if route_macro.nil?
+        super
+      else
+        pattern = params.shift || route_macro[:pattern]
+        options = route_macro[:options].merge(params.shift || {})
+        if !params.empty?
+          raise ArgumentError,
+            "wrong number of arguments (#{params.size + 2} for 2)"
+        end
+        route(pattern, options)
+      end
+    end
+    
+    # Returns true if the instance responds to the given method.
+    def respond_to?(method, include_private=false)
+      route_macro = self.class.macros[method]
+      if route_macro.nil?
+        super
+      else
+        true
       end
     end
   end

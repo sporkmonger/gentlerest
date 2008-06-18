@@ -31,22 +31,25 @@ module GentleREST
     # Route that permanently redirects any requests that match the pattern
     # without its trailing slash to the actual resource.
     def generate
-      if @pattern[-1] == 47 || @pattern[-1] == "/"
-        primary_pattern = @pattern
-        slashless_pattern = @pattern[0...-1]
+      if pattern[-1] == 47 || pattern[-1] == "/"
+        primary_pattern = pattern
+        slashless_pattern = pattern[0...-1]
       else
-        primary_pattern = @pattern + "/"
-        slashless_pattern = @pattern
+        primary_pattern = pattern + "/"
+        slashless_pattern = pattern
       end
+      new_options = options.dup
+      controller = new_options.delete(:controller)
+      redirect_type = (new_options.delete(:redirect_type) || :permanent)
       return [
         GentleREST::Route.new(
           primary_pattern,
-          @controller,
-          @options),
+          controller,
+          new_options),
         GentleREST::Route.new(
           slashless_pattern,
-          GentleREST::RedirectController.new(primary_pattern, :permanent),
-          @options)
+          GentleREST::RedirectController.new(primary_pattern, redirect_type),
+          new_options)
       ]
     end
   end

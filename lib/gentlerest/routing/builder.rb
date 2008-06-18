@@ -36,18 +36,21 @@ module GentleREST
     # Creates a RouteBuilder.  Subclasses should not override this method.
     # If the method must be overridden, it must maintain the same method
     # signature.
-    def initialize(pattern, controller, options={})
+    def initialize(pattern, options={})
       @pattern = pattern
-      @controller = controller
       @options = options
     end
+    
+    attr_reader :pattern, :options
     
     # Generates a single Route object.
     # Subclasses of RouteBuilder should override this method with whatever
     # route building behavior is desired.
     # This method must return an Array of Routes.
     def generate
-      return [GentleREST::Route.new(@pattern, @controller, @options)]
+      new_options = @options.dup
+      controller = new_options.delete(:controller)
+      return [GentleREST::Route.new(@pattern, controller, new_options)]
     end
   end
 end

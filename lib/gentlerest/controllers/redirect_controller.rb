@@ -30,6 +30,11 @@ module GentleREST
     def initialize(location_pattern, redirect_type=:found)
       @location_pattern = location_pattern
       @redirect_type = redirect_type
+      if ![:permanent, :found, :see_other, :temporary].include?(redirect_type)
+        raise ArgumentError,
+          "Expected :permanent, :found, :see_other, or :temporary, " +
+          "got #{@redirect_type.inspect}"
+      end
     end
 
     attr_reader :location_pattern
