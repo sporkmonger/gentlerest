@@ -54,12 +54,12 @@ module GentleREST
       response.utf8
       begin
         response.render("errors/#{@presenter.response_status}", @presenter)
-      rescue GentleREST::TemplateLoadError
+      rescue GentleREST::ResourceNotFoundError
         # Couldn't find the template, time to explode
         response.status = 500
         begin
           response.render("errors/template_missing", @presenter)
-        rescue GentleREST::TemplateLoadError
+        rescue GentleREST::ResourceNotFoundError
           response.plain_text
           template_content = "Missing template: #{@presenter.response_status}"
         end
