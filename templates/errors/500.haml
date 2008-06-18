@@ -69,7 +69,7 @@
       %h2= error.class.name
     #content
       %p An error has occurred while processing the request:
-      %p=h error.message
+      %p= (h error.message).gsub("\n", "<br />\n")
       - if error.respond_to?(:backtrace) && error.backtrace != nil
         %p
           = preformat(h(error.backtrace.join("\n")))
